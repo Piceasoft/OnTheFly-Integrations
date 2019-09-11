@@ -22,11 +22,16 @@ const log             = require('./log.js');
 // The config file name (loaded at startup and re-loaded when changed)
 const CONFIG_FILE = './config.json';
 
+// Reporting start index
+let m_startIndex = 0;
+
+// Config file must be there
 if (!fs.existsSync(CONFIG_FILE)) {
     log.error(`file ${CONFIG_FILE} not found, use ${CONFIG_FILE}.template as a template for it`);
     process.exit(1);
 }
 
+// Activate configuration
 function deployConfig(config)
 {
     log.setDebugs(config.debug);
@@ -34,28 +39,31 @@ function deployConfig(config)
 }
 
 
-let m_startIndex = 0;
-
+// Poll new reports. Runs every 5 mins
 function poller()
 {
     function _done()
     {
-        log.info('sleep awhile...');
+        log.info('done getting reports, sleep awhile...');
         setTimeout(poller, 60*5*1000);
     }
-    
+
     let filters = { };
 
     if (process.argv.length > 2)
         filters.imei = process.argv[2];;
     
-    if (!m_startIndex)    
+    if (!m_startIndex) // Start from today as not polled before
         filters.startdate = new Date().toISOString().slice(0, 10);
     else
         filters.startindex = m_startIndex;
-    
+
+    log.info(`getting reports based on filter ${JSON.stringify(filters)}`);
+
+    // get transactions, a.k.a reports
     reportapi.getTransactions(filters, (err, transactions) => {
         if (!err && Array.isArray(transactions)) {
+            // sync-loop the whole array getting details of the transaction (report)
             let count = transactions.length;            
             reportapi_utils.syncLoop(count, (loop) => {
                 let ix = loop.iteration();
@@ -80,21 +88,20 @@ function poller()
 }
 
 
-
+// Initial deployment
 deployConfig(require(CONFIG_FILE));
 
-// watch changes
+// Watch config changes
 fs.watch(CONFIG_FILE, function() {
-    // sleep a while before reading
+    // sleep a while before reading as saving in editor side may take time
     setTimeout(() => {
         fs.readFile(CONFIG_FILE, 'utf8', function (err, data) {
             if (!err) {
                 let newConfig = null;
-
                 try {
                     newConfig = JSON.parse(data);
                 } catch (er) {
-                    log.error(`failed to read configuration file '${CONFIG_FILE}' (${er})`);
+                    log.error(`failed to parse configuration file '${CONFIG_FILE}' (${er})`);
                     newConfig = null;
                 }
                 if (newConfig) {
@@ -102,11 +109,13 @@ fs.watch(CONFIG_FILE, function() {
                     log.info(`reloaded configuration file '${CONFIG_FILE}'`);
                 }                
             }
+            else
+                log.error(`failed to read configuration file '${CONFIG_FILE}' (${err})`);
         });
     }, 1000);
 });    
 
-
+// And start polling
 poller();
 
 
