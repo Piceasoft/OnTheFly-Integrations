@@ -121,6 +121,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
               headers:  headers,
               body:     jsonBody
             }, (err, response, responseData) => {
+                isJSONError = false;
                 if (!err) {
                     if (response.statusCode !== 200)
                         err = `reportapi HTTP error code ${response.statusCode}`;
@@ -135,6 +136,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                             }
                             if (responseData && responseData.status !== 0) {
                                 err = responseData;
+                                isJSONError = true;
                                 responseData = null;
                             }
                         }
@@ -145,7 +147,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                     responseData = null;
                 }
                 if (err)
-                    log.error(err + ` (request=${reqUrl}`);
+                    log.error(isJSONError ? JSON.stringify(err, null, 2) : err + ` (request=${reqUrl}`);
                 else
                     log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)} done'`);                
                 return onReady(err, responseData);

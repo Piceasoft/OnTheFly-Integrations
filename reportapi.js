@@ -34,7 +34,7 @@ exports.init = function (api_id, api_key, url_base)
 /**
    Get transactions
 
-   @param {Object|null}                      filters - imei and startdate can be set; if not set, list transactions from today
+   @param {Object|null}                      filters - imei, startindex and startdate can be set; if not set, list transactions from today
    @param {function(Object|null,Array|null)} onReady - The callback that handles the result
 */
 
@@ -47,8 +47,10 @@ exports.getTransactions = function (filters, onReady)
             requestData.imei = filters.imei;
         if (typeof filters.startdate === 'string')
             requestData.startdate = filters.startdate;
+        if (typeof filters.startindex === 'number')
+            requestData.startindex = filters.startindex;
     }
-    if (!requestData.imei && !requestData.startdate) {
+    if (!requestData.imei && !requestData.startindex && !requestData.startdate) {
         // No filters, get reports from today
         requestData.startdate = new Date().toISOString().slice(0, 10);
     }
