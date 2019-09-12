@@ -28,6 +28,41 @@
 const app   = require('../app');
 const debug = require('debug')('onthefly-integrations:server');
 const http  = require('http');
+const fs    = require('fs');
+
+
+/**
+ * Private modules.
+ */
+
+const reportapi       = require('../reporting API/reportapi.js');
+const log             = require('../utils/log.js');
+
+
+/**
+ * Configuration deployment.
+ */
+
+const CONFIG_FILE          = 'config/config.js';
+const CONFIG_FILE_TEMPLATE = 'config/config.template.js';
+
+if (!fs.existsSync(CONFIG_FILE)) {
+    log.error(`file ${CONFIG_FILE} not found, use ${CONFIG_FILE_TEMPLATE} as basis for it`);
+    process.exit(1);
+}
+
+const config = require('../' + CONFIG_FILE);
+
+log.setDebugs(config.DEBUG);
+reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
+
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+
+
 
 /**
  * Get port from environment and store in Express.
