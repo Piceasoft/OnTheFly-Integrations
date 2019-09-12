@@ -42,65 +42,16 @@ if (!fs.existsSync(CONFIG_FILE)) {
 // Activate configuration
 function deployConfig(config)
 {
-    log.setDebugs(config.DEBUG);
+    log.setDebugs(true);
     reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
 }
 
-
-// Poll new reports. Runs every 5 mins
-function poller()
-{
-    function _done()
-    {
-        const SLEEPTIME = 60*5*1000;
-        log.info(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
-        setTimeout(poller, SLEEPTIME);
-    }
-
-    let filters = { };
-
-    if (process.argv.length > 2)
-        filters.imei = process.argv[2];;
-    
-    if (!m_startIndex) // Start from today as not polled before
-        filters.startdate = new Date().toISOString().slice(0, 10);
-    else
-        filters.startindex = m_startIndex;
-
-    log.info(`getting reports based on filter ${JSON.stringify(filters)}`);
-
-    // get transactions, a.k.a reports
-    reportapi.getTransactions(filters, (err, transactions) => {
-        if (!err && Array.isArray(transactions)) {
-            // sync-loop the whole array getting details of the transaction (report)
-            let count = transactions.length;            
-            reportapi_utils.syncLoop(count, (loop) => {
-                let ix = loop.iteration();
-                let transaction = transactions[ix];
-                console.log(`IMEI: ${transaction.imei}`);
-                reportapi.getTransaction(transaction.uid, transaction.type, (err, details) => {
-                    if (err)
-                        loop.break(true);
-                    else {
-                        console.log(JSON.stringify(details, null, 2));
-                        m_startIndex = transaction.index + 1;
-                        loop.next();
-                    }
-                });
-            }, () => {   // syncloop is done
-                _done();
-            });
-        }
-        else
-            _done(); // nothing got
-    });
-}
 
 
 // Initial deployment
 deployConfig(require(CONFIG_FILE));
 
 // Start polling
-poller();
+reportapi.poller();
 
 

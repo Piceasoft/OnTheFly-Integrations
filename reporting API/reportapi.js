@@ -151,7 +151,7 @@ function poller()
                     if (err)
                         loop.break(true);
                     else {
-                        console.log(JSON.stringify(details, null, 2));
+                        log.debug(JSON.stringify(details, null, 2));
                         m_startIndex = transaction.index + 1;
                         loop.next();
                     }

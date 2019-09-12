@@ -57,6 +57,9 @@ function getErrorText(code)
     return 'ReportAPI failed (' + text + ')';
 }
 
+
+const ERR_NOT_FOUND = 1007;
+
 /**
    Init module
 
@@ -151,6 +154,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
               headers:  headers,
               body:     jsonBody
             }, (err, response, responseData) => {
+                let isInfoError = false;
                 if (!err) {
                     // Check if we got response error
                     if (response.statusCode !== 200) {
@@ -167,6 +171,8 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                             err = e;
                         }
                         if (responseData && responseData.status !== 0) {
+                            if (responseData.status === ERR_NOT_FOUND)
+                                isInfoError = true; 
                             err = new Error(getErrorText(responseData.status));
                             err.reportapi_status = responseData.status;
                             if (responseData.error_details)
@@ -180,7 +186,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                     responseData = null;
 
                 if (err)
-                    log.error(err + ` (request=${reqUrl})`);
+                    isInfoError ? log.info(err + ` (request=${reqUrl})`) : log.error(err + ` (request=${reqUrl})`);
                 else
                     log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)}' done`);                
                 return onReady(err, responseData);
