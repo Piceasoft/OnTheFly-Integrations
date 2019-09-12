@@ -34,6 +34,29 @@ let m_apiKey   = 'none';
 let m_apiId    = 'API ID NOT DEFINED';
 let m_urlBase  = 'https://api.piceasoft.com/';
 
+
+function getErrorText(code)
+{
+    let text = "Undefined error";
+    switch (code) {
+    case    0: text = "OK";break;
+    case   -1: text = "Internmal error"; break;
+    case 1000: text = "Signature mismatch"; break;
+    case 1001: text = "Unknown client ID";  break;
+    case 1002: text = "Invalid parameters"; break;
+    case 1003: text = "Database error"; break;
+    case 1004: text = "Unknown command"; break;
+    case 1005: text = "Invalid JSON input"; break;
+    case 1006: text = "Server not ready"; break;
+    case 1007: text = "Object(s) not found"; break;
+    case 1008: text = "Server busy"; break;
+    case 1009: text = "Access denied"; break;
+    case 1010: text = "Invalid PDF"; break;
+    case 1011: text = "Language not supported"; break;
+    }
+    return 'ReportAPI failed (' + text + ')';
+}
+
 /**
    Init module
 
@@ -128,35 +151,38 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
               headers:  headers,
               body:     jsonBody
             }, (err, response, responseData) => {
-                isJSONError = false;
                 if (!err) {
-                    if (response.statusCode !== 200)
-                        err = `reportapi HTTP error code ${response.statusCode}`;
-                    else {
-                        if (response.headers && response.headers['content-type'] === 'application/json') {
-                            // Convert JSON to object
-                            try {
-                                responseData = JSON.parse(responseData);
-                            } catch (e) {
-                                err = `reportapi result JSON parse failed ${e}`;
-                                responseData = null;
-                            }
-                            if (responseData && responseData.status !== 0) {
-                                err = responseData;
-                                isJSONError = true;
-                                responseData = null;
-                            }
+                    // Check if we got response error
+                    if (response.statusCode !== 200) {
+                        err = new Error(`reportapi HTTP error ${response.statusCode}`);
+                        err.http_code = response.statusCode;                        
+                    }
+                    else
+                    if (response.headers && response.headers['content-type'] === 'application/json') {
+                        // Convert JSON to object
+                        try {
+                            responseData = JSON.parse(responseData);
+                        } catch (e) {
+                            responseData = null;
+                            err = e;
+                        }
+                        if (responseData && responseData.status !== 0) {
+                            err = new Error(getErrorText(responseData.status));
+                            err.reportapi_status = responseData.status;
+                            if (responseData.error_details)
+                                err.reportapi_error_details = responseData.error_details;
+                                
+                            responseData = null;
                         }
                     }
                 }
-                else {
-                    err = `reportapi request failed '${err}'`;
+                else  // Error, no response 
                     responseData = null;
-                }
+
                 if (err)
-                    log.error(isJSONError ? JSON.stringify(err, null, 2) : err + ` (request=${reqUrl}`);
+                    log.error(err + ` (request=${reqUrl})`);
                 else
-                    log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)} done'`);                
+                    log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)}' done`);                
                 return onReady(err, responseData);
             });
 };

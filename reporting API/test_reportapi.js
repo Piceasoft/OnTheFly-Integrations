@@ -52,8 +52,9 @@ function poller()
 {
     function _done()
     {
-        log.info('done getting reports, sleep awhile...');
-        setTimeout(poller, 60*5*1000);
+        const SLEEPTIME = 60*5*1000;
+        log.info(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
+        setTimeout(poller, SLEEPTIME);
     }
 
     let filters = { };

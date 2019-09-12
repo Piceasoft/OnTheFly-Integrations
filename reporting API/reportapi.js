@@ -25,6 +25,16 @@ const api_utils = require('./reportapi_utils.js');
 
 
 /**
+  Note on error object of onReady callback:
+
+  It is normal error object, with the following additional properties:
+  - http_code:               in case HTTP error (i.e return code is not 200)
+  - reportapi_status:        in case reporting API failed, this is the 'status'
+  - reportapi_error_details: in case reporting API failed and it has details, this is the 'error_details'
+*/
+
+
+/**
    Init reporting API
 
    @param {string}           api_id  - API ID
