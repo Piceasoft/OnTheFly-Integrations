@@ -55,6 +55,7 @@ const config = require('../' + CONFIG_FILE);
 
 log.setDebugs(config.DEBUG);
 reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
+reportapi.poller();
 
 
 /**

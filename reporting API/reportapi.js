@@ -20,8 +20,9 @@
  * THE SOFTWARE.
  */
 
-// Our own module
-const api_utils = require('./reportapi_utils.js');
+// Our own modules
+const log             = require('../utils/log.js');
+const api_utils       = require('./reportapi_utils.js');
 
 
 /**
@@ -55,7 +56,7 @@ exports.init = function (api_id, api_key, url_base)
    @param {function(Object|null,Array|null)} onReady - The callback that handles the result
 */
 
-exports.getTransactions = function (filters, onReady)
+function getTransactions(filters, onReady)
 {
     let requestData = { };
 
@@ -78,7 +79,8 @@ exports.getTransactions = function (filters, onReady)
         else
             return onReady(null, getTransactionsResponse.transactions);
     });
-};
+}
+exports.getTransactions = getTransactions;
 
 
 /**
@@ -88,8 +90,7 @@ exports.getTransactions = function (filters, onReady)
    @param {Number}   type - report type
    @param {function(Object|null,Object|null)} onReady - The callback that handles the result
 */
-
-exports.getTransaction = function (uid, type, onReady)
+function getTransaction(uid, type, onReady)
 {
     api_utils.apiRequest(null, 'get_transaction_details', { uid: uid, type: type, get_custom_fields: true }, (err, details) => {
         if (err || !details) 
@@ -97,7 +98,8 @@ exports.getTransaction = function (uid, type, onReady)
         else
             return onReady(null, details);
     });
-};
+}
+exports.getTransaction = getTransaction;
 
 
 
@@ -114,3 +116,53 @@ exports.getPDF = function (uid, onReady)
         onReady(err, pdfContent);
     });
 };
+
+
+let m_startIndex = 0;
+
+function poller()
+{
+    function _done()
+    {
+        const SLEEPTIME = 60*5*1000;
+        log.debug(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
+        setTimeout(poller, SLEEPTIME);
+    }
+
+    let filters = { };
+
+    if (!m_startIndex) // Start from today as not polled before
+        filters.startdate = new Date().toISOString().slice(0, 10);
+    else
+        filters.startindex = m_startIndex;
+
+    log.debug(`getting reports based on filter ${JSON.stringify(filters)}`);
+
+    // get transactions, a.k.a reports
+    getTransactions(filters, (err, transactions) => {
+        if (!err && Array.isArray(transactions)) {
+            // sync-loop the whole array getting details of the transaction (report)
+            let count = transactions.length;            
+            api_utils.syncLoop(count, (loop) => {
+                let ix = loop.iteration();
+                let transaction = transactions[ix];
+                log.debug(`IMEI: ${transaction.imei}`);
+                getTransaction(transaction.uid, transaction.type, (err, details) => {
+                    if (err)
+                        loop.break(true);
+                    else {
+                        console.log(JSON.stringify(details, null, 2));
+                        m_startIndex = transaction.index + 1;
+                        loop.next();
+                    }
+                });
+            }, () => {   // syncloop is done
+                _done();
+            });
+        }
+        else
+            _done(); // nothing got
+    });
+}
+
+exports.poller = poller;
