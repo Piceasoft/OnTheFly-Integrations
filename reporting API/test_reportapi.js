@@ -27,22 +27,23 @@ const reportapi_utils = require('./reportapi_utils.js');
 const log             = require('../utils/log.js');
 
 // The config file name (loaded at startup and re-loaded when changed)
-const CONFIG_FILE = './config.json';
+const CONFIG_FILE          = '../config/config.js';
+const CONFIG_FILE_TEMPLATE = '../config/config.template.js';
 
 // Reporting start index
 let m_startIndex = 0;
 
 // Config file must be there
 if (!fs.existsSync(CONFIG_FILE)) {
-    log.error(`file ${CONFIG_FILE} not found, use ${CONFIG_FILE}.template as a template for it`);
+    log.error(`file ${CONFIG_FILE} not found, use ${CONFIG_FILE_TEMPLATE} as basis for it`);
     process.exit(1);
 }
 
 // Activate configuration
 function deployConfig(config)
 {
-    log.setDebugs(config.debug);
-    reportapi.init(config.api_id, config.api_key, config.url_base);
+    log.setDebugs(config.DEBUG);
+    reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
 }
 
 
@@ -98,31 +99,7 @@ function poller()
 // Initial deployment
 deployConfig(require(CONFIG_FILE));
 
-// Watch config changes
-fs.watch(CONFIG_FILE, function() {
-    // sleep a while before reading as saving in editor side may take time
-    setTimeout(() => {
-        fs.readFile(CONFIG_FILE, 'utf8', function (err, data) {
-            if (!err) {
-                let newConfig = null;
-                try {
-                    newConfig = JSON.parse(data);
-                } catch (er) {
-                    log.error(`failed to parse configuration file '${CONFIG_FILE}' (${er})`);
-                    newConfig = null;
-                }
-                if (newConfig) {
-                    deployConfig(newConfig);
-                    log.info(`reloaded configuration file '${CONFIG_FILE}'`);
-                }                
-            }
-            else
-                log.error(`failed to read configuration file '${CONFIG_FILE}' (${err})`);
-        });
-    }, 1000);
-});    
-
-// And start polling
+// Start polling
 poller();
 
 

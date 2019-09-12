@@ -32,7 +32,7 @@ const log = require('../utils/log.js');
 // Module settings
 let m_apiKey   = 'none';
 let m_apiId    = 'API ID NOT DEFINED';
-let m_urlBase  = 'https://api.piceasoft.com';
+let m_urlBase  = 'https://api.piceasoft.com/';
 
 /**
    Init module
@@ -44,12 +44,12 @@ let m_urlBase  = 'https://api.piceasoft.com';
 
 exports.init = function(apiId, apiKey, urlBase)
 {
-    m_apiKey = apiKey;
     m_apiId = apiId;
+    m_apiKey = apiKey;
     if (typeof urlBase === 'string')
         m_urlBase = urlBase;
 
-    log.info(`Report API inited to URL ${m_urlBase}`);
+    log.info(`Report API inited with API ID '${apiId}' to URL '${m_urlBase}'`);
     
 };
 
@@ -119,7 +119,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                         'x-piceasoft-client-id': m_apiId,
                         'x-piceasoft-signature': signature };
     
-    let reqUrl  = m_urlBase + '/reporting/v1/' + cmd;
+    let reqUrl  = m_urlBase + 'reporting/v1/' + cmd;
     log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)}'...`);
     request({ url:      reqUrl,
               method:  'POST',

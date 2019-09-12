@@ -1,6 +1,0 @@
-{
-  "url_base": "https://api.piceasoft.com",
-  "api_id": "<YOUR API ID HERE>",
-  "api_key": "<YOUR API KEY HERE>",
-  "debug":true
-}
