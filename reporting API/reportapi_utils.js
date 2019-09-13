@@ -54,7 +54,7 @@ function getErrorText(code)
     case 1010: text = "Invalid PDF"; break;
     case 1011: text = "Language not supported"; break;
     }
-    return 'ReportAPI failed (' + text + ')';
+    return text;
 }
 
 
@@ -172,9 +172,11 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                         }
                         if (responseData && responseData.status !== 0) {
                             if (responseData.status === ERR_NOT_FOUND)
-                                isInfoError = true; 
-                            err = new Error(getErrorText(responseData.status));
+                                isInfoError = true;
+                            let errTxt = getErrorText(responseData.status);
+                            err = new Error(`ReportAPI error (${errTxt})`);
                             err.reportapi_status = responseData.status;
+                            err.reportapi_status_text = errTxt;
                             if (responseData.error_details)
                                 err.reportapi_error_details = responseData.error_details;
                                 
@@ -185,8 +187,10 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                 else  // Error, no response 
                     responseData = null;
 
-                if (err)
+                if (err) {
+                    err.reportapi_command = cmd;
                     isInfoError ? log.info(err + ` (request=${reqUrl})`) : log.error(err + ` (request=${reqUrl})`);
+                }
                 else
                     log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)}' done`);                
                 return onReady(err, responseData);

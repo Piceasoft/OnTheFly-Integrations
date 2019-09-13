@@ -29,8 +29,10 @@ const api_utils       = require('./reportapi_utils.js');
   Note on error object of onReady callback:
 
   It is normal error object, with the following additional properties:
+  - reportapi_command:       the reportapi command name (like 'get_transaction_details')
   - http_code:               in case HTTP error (i.e return code is not 200)
   - reportapi_status:        in case reporting API failed, this is the 'status'
+  - reportapi_status_text:   in case reporting API failed, this is the 'status' error string
   - reportapi_error_details: in case reporting API failed and it has details, this is the 'error_details'
 */
 
@@ -120,7 +122,14 @@ exports.getPDF = function (uid, onReady)
 
 let m_startIndex = 0;
 
-function poller()
+
+/**
+   Poll for reports
+
+   @param {function(Object|null,Buffer|null)} onReady - The callback that handles the result
+*/
+
+function poller(onReady)
 {
     function _done()
     {
@@ -148,10 +157,15 @@ function poller()
                 let transaction = transactions[ix];
                 log.debug(`IMEI: ${transaction.imei}`);
                 getTransaction(transaction.uid, transaction.type, (err, details) => {
-                    if (err)
+                    if (err) {
+                        if (typeof onReady === 'function')
+                            onReady(err, null);
                         loop.break(true);
+                    }
                     else {
                         log.debug(JSON.stringify(details, null, 2));
+                        if (typeof onReady === 'function')
+                            onReady(null, details);
                         m_startIndex = transaction.index + 1;
                         loop.next();
                     }
@@ -160,8 +174,11 @@ function poller()
                 _done();
             });
         }
-        else
+        else {
+            if (err && typeof onReady === 'function')
+                onReady(err, null);
             _done(); // nothing got
+        }
     });
 }
 

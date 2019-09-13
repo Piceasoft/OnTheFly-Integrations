@@ -23,15 +23,11 @@
 const fs              = require('fs');
 
 const reportapi       = require('./reportapi.js');
-const reportapi_utils = require('./reportapi_utils.js');
 const log             = require('../utils/log.js');
 
-// The config file name (loaded at startup and re-loaded when changed)
+// The config file name(s)
 const CONFIG_FILE          = '../config/config.js';
 const CONFIG_FILE_TEMPLATE = '../config/config.template.js';
-
-// Reporting start index
-let m_startIndex = 0;
 
 // Config file must be there
 if (!fs.existsSync(CONFIG_FILE)) {
@@ -42,16 +38,26 @@ if (!fs.existsSync(CONFIG_FILE)) {
 // Activate configuration
 function deployConfig(config)
 {
-    log.setDebugs(true);
+    log.setDebugs(false);  // no debugs
     reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
 }
 
-
-
-// Initial deployment
+// Set config
 deployConfig(require(CONFIG_FILE));
 
 // Start polling
-reportapi.poller();
+reportapi.poller((err, report) => {
+    if (!err) {
+        if (report)
+            console.log('report:' + JSON.stringify(report, null, 2));
+        else
+            console.log('no reports now');            
+    }
+    else {
+        console.log(err);
+        console.error('ERROR:' + JSON.stringify(err, null, 2));
+    }
+    
+});
 
 
