@@ -28,7 +28,7 @@
 <body>
 
 <!-- Navigation -->
-<% include navigation_bar.ejs %>
+<% include components/navigation_bar.ejs %>
 
 <!-- Header Content -->
 <div class="container-fluid vh-100" id="header-container">
@@ -55,11 +55,10 @@
 </div>
 
 <!-- Footer -->
-<% include footer.ejs %>
+<% include components/footer.ejs %>
 
-<!-- Bootstrap core JavaScript -->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
 
 <script>
     $(document).ready(function() {
