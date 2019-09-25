@@ -20,12 +20,32 @@
  * THE SOFTWARE.
  */
 
-const express = require('express');
-const router = express.Router();
+const express       = require('express');
+const router        = express.Router();
+const uuid          = require('uuid');
+const querystring   = require('querystring');
+
+const config        = require('../config/config');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-    res.render('index', { title: 'Acme - OnTheFly' });
+
+    // Construct query parameters for loading OnTheFly JavaScript API
+    const queryParameters = {
+        account_id      : config.JS_API_ACCOUNT_ID,
+        transaction_id  : uuid.v4(),
+        features        : 'verify;dgs',
+        user_id         : '4a410871-2968-452b-9dce-98d380b36b6f',
+        user_name       : 'hsalminen'
+    };
+
+    // Construct OnTheFly JavaScript API download URL
+    const OTF_JS_API_URL = config.JS_API_URL + "?" + querystring.stringify(queryParameters);
+
+    res.render('index', {
+        title               : 'Acme - OnTheFly',
+        onthefly_js_api_url : OTF_JS_API_URL
+    });
 });
 
 module.exports = router;
