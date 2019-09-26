@@ -140,10 +140,14 @@
         if(typeof OTFAPI === "undefined") {
             // OnTheFly JavaScript API loading has failed.
             console.log("OnTheFly JavaScript API loading failed.");
+
+            // Show the error view as OnTheFly JavaScript loading has failed.
             $('#js-api-loading-error-container').show();
         } else {
             // OnTheFly JavaScript API has been successfully loaded.
             console.log("OnTheFly JavaScript API loaded successfully.")
+
+            // Hide the error view in case it was visible.
             $('#js-api-loading-error-container').hide();
 
             /**
@@ -184,7 +188,7 @@
             });
 
             /**
-             * OnTheFly JavaScript API calls this callback when the API has–-–
+             * OnTheFly JavaScript API calls this callback when the API has
              * detected that mobile device has disconnected from the OnTheFly
              * session.
              *
@@ -248,6 +252,9 @@
                 // OnTheFly JavaScript API has been loaded but Verify feature is
                 // not available.
                 console.log("OnTheFly JavaScript API is loaded but Verify feature is not available.");
+
+                // Show the error view as OnTheFly JavaScript API does not
+                // include Verify feature that we would like to use.
                 $('#js-api-loading-error-container').show();
             } else {
                 // From here we are safe to use OnTheFly JavaScript API
@@ -311,7 +318,6 @@
                     ]);
                 });
 
-
                 /**
                  * OnTheFly JavaScript API calls this callback when the Verify
                  * check has been started in the device.
@@ -344,7 +350,7 @@
                  * the started Verify operation.
                  */
                 OTFAPI.verify.onOperationStarted(function(operationStatus) {
-                    console.log(operationStatus.uid);
+                    console.log("Verify operation (" + operationStatus.uid + ") has started.");
                 });
 
                 /**
@@ -355,7 +361,7 @@
                  * the progressed Verify operation.
                  */
                 OTFAPI.verify.onOperationProgress(function(operationStatus) {
-                    console.log(operationStatus.uid);
+                    console.log("Verify operation (" + operationStatus.uid + ") has progressed.");
                 });
 
                 /**
@@ -366,7 +372,7 @@
                  * the completed Verify operation.
                  */
                 OTFAPI.verify.onOperationFinished(function(operationStatus) {
-                    console.log(operationStatus.uid);
+                    console.log("Verify operation (" + operationStatus.uid + ") has completed.");
                 });
 
                 /**
@@ -465,14 +471,18 @@
              * Diagnostics feature.
              */
             if(typeof OTFAPI.diagnostics === "undefined") {
-                // OnTheFly JavaScript API has been loaded but Verify feature is
-                // not available.
+                // OnTheFly JavaScript API has been loaded but Diagnostics
+                // feature is not available.
                 console.log("OnTheFly JavaScript API is loaded but Diagnostics feature is not available.");
+
+                // Show the error view as OnTheFly JavaScript API does not
+                // include Diagnostics feature that we would like to use.
                 $('#js-api-loading-error-container').show();
             } else {
                 // From here we are safe to use OnTheFly JavaScript API
                 // Diagnostics features.
 
+                // Variables for calculating Diagnostics progress.
                 let mDiagnosticsTestCount           = 15;
                 let mExecutedDiagnosticsTestCount   = 0;
 
@@ -607,17 +617,6 @@
 
                 /**
                  * OnTheFly JavaScript API calls this callback when the
-                 * Diagnostics operation has progressed in the device.
-                 *
-                 * Parameter operationStatus includes the information about
-                 * the Diagnostics operation.
-                 */
-                OTFAPI.diagnostics.onOperationProgress(function(operationStatus) {
-                    console.log("Diagnostics operation (" + operationStatus.uid + ") progress.");
-                });
-
-                /**
-                 * OnTheFly JavaScript API calls this callback when the
                  * Diagnostics operation has been completed in the device.
                  *
                  * Parameter operationStatus includes the information about
@@ -626,7 +625,6 @@
                 OTFAPI.diagnostics.onOperationFinished(function(operationStatus) {
                     console.log("Diagnostics operation (" + operationStatus.uid + ") finished.");
                 });
-
 
                 /**
                  * OnTheFly JavaScript API calls this callback when the
@@ -660,7 +658,6 @@
                 OTFAPI.diagnostics.onTestSetFinished(function(testSetStatus) {
                     console.log("Diagnostics test set (" + testSetStatus.set_id + ") finished.");
                 });
-
 
                 /**
                  * OnTheFly JavaScript API calls this callback when the
@@ -708,7 +705,6 @@
                     let progress = (mExecutedDiagnosticsTestCount / mDiagnosticsTestCount) * 100;
                     updateDiagnosticsOperationProgress(progress);
                 });
-
 
                 /**
                  * Shows progress indicator for test case provided as parameter.
