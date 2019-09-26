@@ -20,14 +20,21 @@
  * THE SOFTWARE.
  */
 
+// Modules
 const express       = require('express');
 const router        = express.Router();
 const uuid          = require('uuid');
 const querystring   = require('querystring');
 
+// Private modules
+const reportingAPI  = require('../reporting API/reportapi');
+
+// Server configuration
 const config        = require('../config/config');
 
-/* GET home page. */
+/**
+ * GET index page.
+ */
 router.get('/', function(req, res, next) {
 
     // Construct query parameters for loading OnTheFly JavaScript API
@@ -44,7 +51,67 @@ router.get('/', function(req, res, next) {
 
     res.render('index', {
         title               : 'Acme - OnTheFly',
-        onthefly_js_api_url : OTF_JS_API_URL
+        onthefly_js_api_url : OTF_JS_API_URL,
+        navbarConfig        : {
+            activeItem : "trade-in"
+        }
+    });
+});
+
+/**
+ * GET reports page.
+ */
+router.get('/reports', function(req, res, next) {
+
+    // Query filters for requesting transactions from reporting API module.
+    let queryFilters = {};
+
+    // Use reporting API module to pull the transactions from the
+    // Piceasoft's reporting API.
+    reportingAPI.getTransactions(queryFilters, function(error, transactions) {
+        if(error) {
+            // Return rendered reports HTML with error.
+            res.render('reports', {
+                title           : 'Acme - Reports',
+                error           : error,
+                errorText       : 'Failed to load transactions from reporting API.',
+                navbarConfig    : {
+                    activeItem : "reports"
+                }
+            });
+        } else {
+            // Return rendered reports HTML with transactions.
+            res.render('reports', {
+                title           : 'Acme - Reports',
+                error           : false,
+                transactions    : transactions.reverse(),
+                navbarConfig    : {
+                    activeItem : "reports"
+                }
+            });
+        }
+    });
+});
+
+/**
+ * POST get transaction details for specific transaction.
+ */
+router.post('/transaction_details', function(req, res, next) {
+
+    // Parse transaction details from request body.
+    const uid = req.body.uid;
+    const type = req.body.type;
+
+    // Use reporting API module to pull the transaction details from the
+    // Piceasoft's reporting API.
+    reportingAPI.getTransaction(uid, type, function(error, details) {
+        if(error) {
+            // Return error details to client.
+            return res.json(error);
+        } else {
+            // Return transaction details to client.
+            return res.json(details);
+        }
     });
 });
 
