@@ -138,7 +138,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
     if (Array.isArray(productIds) && productIds.length > 0)
         requestData.product_ids = productIds;
     
-    let jsonBody  = JSON.stringify(requestData);    
+    let jsonBody     = JSON.stringify(requestData);    
     let data_to_hash = m_apiKey + m_apiId + jsonBody;   
     let signature    = crypto.createHash('sha256').update(data_to_hash).digest('hex');
     let headers      = {'Content-Type'         : 'application/json',
@@ -173,6 +173,7 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                         if (responseData && responseData.status !== 0) {
                             if (responseData.status === ERR_NOT_FOUND)
                                 isInfoError = true;
+                            // Construct error object
                             let errTxt = getErrorText(responseData.status);
                             err = new Error(`ReportAPI error (${errTxt})`);
                             err.reportapi_status = responseData.status;

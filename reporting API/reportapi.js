@@ -120,7 +120,8 @@ exports.getPDF = function (uid, onReady)
 };
 
 
-let m_startIndex = 0;
+
+let m_startIndex = 0;  // index to grap 'next' reports
 
 
 /**
@@ -133,7 +134,7 @@ function poller(onReady)
 {
     function _done()
     {
-        const SLEEPTIME = 60*5*1000;
+        const SLEEPTIME = 60*3*1000;  // 3 mins
         log.debug(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
         setTimeout(poller, SLEEPTIME);
     }
@@ -143,7 +144,7 @@ function poller(onReady)
     if (!m_startIndex) // Start from today as not polled before
         filters.startdate = new Date().toISOString().slice(0, 10);
     else
-        filters.startindex = m_startIndex;
+        filters.startindex = m_startIndex;  // Start from where we left
 
     log.debug(`getting reports based on filter ${JSON.stringify(filters)}`);
 
@@ -166,8 +167,8 @@ function poller(onReady)
                         log.debug(JSON.stringify(details, null, 2));
                         if (typeof onReady === 'function')
                             onReady(null, details);
-                        m_startIndex = transaction.index + 1;
-                        loop.next();
+                        m_startIndex = transaction.index + 1;  // Save the start index
+                        loop.next();  // Continue sync loop
                     }
                 });
             }, () => {   // syncloop is done
