@@ -29,7 +29,6 @@ const logger            = require('morgan');
 
 // Routers
 const indexRouter       = require('./routes/index');
-const apiRouter         = require('./routes/api');
 
 const app = express();
 
@@ -45,7 +44,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use('/', indexRouter);
-app.use('/api', apiRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {

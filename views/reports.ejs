@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/style.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- Navigation -->
+<% include components/navigation_bar.ejs %>
+
+<!-- Reports Content -->
+<div class="container-fluid min-vh-100" id="reports-container">
+    <div class="row">
+        <div class="col-lg-12">
+            <% if(error) { %>
+                <p><%= errorText %></p>
+            <% } else { %>
+                <% for(let transaction of transactions) { %>
+                    <div id="transactions">
+                        <div class="card" style="margin: 0.25rem;">
+                            <div class="card-header" id="heading-<%= transaction.uid %>" data-toggle="collapse" data-target="#collapse-<%= transaction.uid %>" aria-expanded="false" aria-controls="collapse-<%= transaction.uid %>" style="padding: 0.25rem;">
+                                <div class="row">
+                                    <div class="col-2">
+                                        <span><%= transaction.type_string.replace(/^\w/, firstCharacter => firstCharacter.toUpperCase()); %></span>
+                                    </div>
+
+                                    <div class="col-4">
+                                        <span><%= transaction.manufacturer %> <%= transaction.model_name %> (<%= transaction.imei %>)</span>
+                                    </div>
+
+                                    <div class="col-2">
+                                        <span><%= transaction.timestamp %></span>
+                                    </div>
+
+                                    <div class="col-4">
+                                        <span><%= transaction.uid %></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="collapse-<%= transaction.uid %>" class="collapse" data-uid="<%= transaction.uid %>" data-type="<%= transaction.type %>" aria-labelledby="heading-<%= transaction.uid %>" data-parent="#transactions">
+                                <div class="card-body">
+                                    <pre class="transaction-details-container"><%= JSON.stringify(transaction, undefined, 2) %></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<% include components/footer.ejs %>
+
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
+
+<script>
+    $(document).ready(function() {
+
+        // Keep fetched transaction IDs to prevent fetching same data
+        // again and again.
+        let fetchedTransactions = [];
+
+        $('.collapse').on('show.bs.collapse', async function () {
+
+            // Access transaction details on expanded transaction.
+            const transactionID = $(this).attr('data-uid');
+            const transactionType = parseInt($(this).attr('data-type'));
+
+            // Check that data for this transaction is not already fetched.
+            if(fetchedTransactions.indexOf(transactionID) !== -1) {
+                return;
+            }
+
+            // Update fetched transactions array
+            fetchedTransactions.push(transactionID);
+
+            // Fetch transaction details
+            let transactionDetails = {};
+
+            try {
+                transactionDetails = await fetchTransactionDetails(transactionID, transactionType);
+            } catch(error) {
+                console.error(error);
+                return;
+            }
+
+            // Update fetched transaction details into DOM
+            $(this).find('.transaction-details-container').append('\n\n' + JSON.stringify(transactionDetails, undefined, 2));
+        })
+
+        /**
+         * Fetch transaction details for specific transaction from back end.
+         *
+         * @param transactionID
+         * - ID of the transaction which details are fetched.
+         *
+         * @param transactionType
+         * - Transaction type as integer. Refer to reporting API documentation
+         *   definitions section for possible values.
+         *
+         * @returns { Promise<Object> }
+         */
+        async function fetchTransactionDetails(transactionID, transactionType) {
+            // Create data object to reporting API end point.
+            let data = {
+                uid: transactionID,
+                type: transactionType
+            }
+
+            // Transaction details API URL in our server (uses Piceasoft
+            // reporting API in server side)
+            const url = '/transaction_details';
+
+            // Create request
+            let request = new Request(url, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: new Headers({'content-type': 'application/json'})
+            });
+
+            let response = await fetch(request);
+            return await response.json();
+        }
+    });
+</script>
+
+</body>
+
+</html>
