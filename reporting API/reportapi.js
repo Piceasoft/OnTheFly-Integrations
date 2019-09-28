@@ -121,7 +121,7 @@ exports.getPDF = function (uid, onReady)
 
 
 
-let m_startIndex = 0;  // index to grap 'next' reports
+let m_startIndex = 0;  // index to grap 'next' reports. In real life save this to persistent storage!
 
 
 /**
@@ -134,6 +134,10 @@ function poller(onReady)
 {
     function _done()
     {
+        if (typeof onReady === 'function')
+            onReady(null, null);
+
+            
         const SLEEPTIME = 60*3*1000;  // 3 mins
         log.debug(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
         setTimeout(poller, SLEEPTIME);
@@ -178,7 +182,7 @@ function poller(onReady)
         else {
             if (err && typeof onReady === 'function')
                 onReady(err, null);
-            _done(); // nothing got
+            _done();
         }
     });
 }

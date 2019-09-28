@@ -30,7 +30,7 @@ const fs      = require('fs');
 const log = require('../utils/log.js');
 
 // Module settings
-let m_apiKey   = 'none';
+let m_apiKey   = 'API KEY NOT DEFINED';
 let m_apiId    = 'API ID NOT DEFINED';
 let m_urlBase  = 'https://api.piceasoft.com/';
 

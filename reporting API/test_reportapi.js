@@ -51,7 +51,7 @@ reportapi.poller((err, report) => {
         if (report)
             console.log('report:' + JSON.stringify(report, null, 2));
         else
-            console.log('no reports now');            
+            console.log('report poll done, zzzzzz....');            
     }
     else {
         console.log(err);
