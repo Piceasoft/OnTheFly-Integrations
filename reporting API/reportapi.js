@@ -132,16 +132,27 @@ let m_startIndex = 0;  // index to grap 'next' reports. In real life save this t
 
 function poller(onReady)
 {
+    function _onReady(err, report)
+    {
+        if (typeof onReady === 'function') {
+            onReady(err, report);
+        }
+    }
+
     function _done()
     {
-        if (typeof onReady === 'function')
-            onReady(null, null);
-
-            
+        
         const SLEEPTIME = 60*3*1000;  // 3 mins
+
         log.debug(`done getting reports, sleep ${SLEEPTIME/1000/60} minutes...`);
-        setTimeout(poller, SLEEPTIME);
+
+        setTimeout( () => {
+            poller(onReady);
+        },  SLEEPTIME);
+
+        _onReady(null, null);
     }
+    
 
     let filters = { };
 
@@ -163,14 +174,12 @@ function poller(onReady)
                 log.debug(`IMEI: ${transaction.imei}`);
                 getTransaction(transaction.uid, transaction.type, (err, details) => {
                     if (err) {
-                        if (typeof onReady === 'function')
-                            onReady(err, null);
+                        _onReady(err, null);
                         loop.break(true);
                     }
                     else {
                         log.debug(JSON.stringify(details, null, 2));
-                        if (typeof onReady === 'function')
-                            onReady(null, details);
+                        _onReady(null, details);
                         m_startIndex = transaction.index + 1;  // Save the start index
                         loop.next();  // Continue sync loop
                     }
@@ -180,8 +189,8 @@ function poller(onReady)
             });
         }
         else {
-            if (err && typeof onReady === 'function')
-                onReady(err, null);
+            if (err)
+                _onReady(err, null);
             _done();
         }
     });

@@ -45,19 +45,24 @@ function deployConfig(config)
 // Set config
 deployConfig(require(CONFIG_FILE));
 
+function onReportGot(err, report)
+{
+    if (!err && !report)
+        console.log('report poller zzzzzz....');            
+    else        
+    if (report)
+        console.log('report:' + JSON.stringify(report, null, 2));
+    else  {
+        if (err.reportapi_status === 1007)
+            console.log('report poll done and nothing found');
+        else {
+            console.log(err);
+            console.error('ERROR:' + JSON.stringify(err, null, 2));
+        }
+    }
+}
+
 // Start polling
-reportapi.poller((err, report) => {
-    if (!err) {
-        if (report)
-            console.log('report:' + JSON.stringify(report, null, 2));
-        else
-            console.log('report poll done, zzzzzz....');            
-    }
-    else {
-        console.log(err);
-        console.error('ERROR:' + JSON.stringify(err, null, 2));
-    }
-    
-});
+reportapi.poller(onReportGot);
 
 
