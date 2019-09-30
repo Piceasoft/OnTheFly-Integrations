@@ -58,7 +58,7 @@ function getErrorText(code)
 }
 
 
-const ERR_NOT_FOUND = 1007;
+const ERR_NOT_FOUND = 1007; // generic 'not found' status
 
 /**
    Init module
@@ -183,14 +183,21 @@ exports.apiRequest = function(productIds, cmd, requestData, onReady)
                                 
                             responseData = null;
                         }
+                    } else {
+                        // strange response
+                        err = new Error(`ReportAPI did not get proper response`);
                     }
+                        
                 }
                 else  // Error, no response 
                     responseData = null;
 
                 if (err) {
                     err.reportapi_command = cmd;
-                    isInfoError ? log.info(err + ` (request=${reqUrl})`) : log.error(err + ` (request=${reqUrl})`);
+                    if (isInfoError)
+                        log.info(err.reportapi_status_text + ` (request=${reqUrl})`);
+                    else
+                        log.error(err + ` (request=${reqUrl})`);
                 }
                 else
                     log.debug(`API request '${reqUrl}' with request data '${JSON.stringify(requestData)}' done`);                
