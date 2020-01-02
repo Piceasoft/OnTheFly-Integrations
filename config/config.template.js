@@ -31,6 +31,13 @@ module.exports = {
      * External URL which is used to load the OnTheFly JavaScript API.
      */
     JS_API_URL: "https://api.piceasoft.com/otf/v2/load_jsapi",
-    JS_API_ACCOUNT_ID: " *** Insert valid account ID here *** "
+    JS_API_PRODUCT_ID: " *** Insert valid account ID here *** ",
+
+    /**
+     * User information for OnTheFly session.
+     * Usually based on login information for example.
+     */
+    USER_NAME: " *** Insert user name here *** ",
+    USER_ID: " *** Insert user ID here *** "
 
 };

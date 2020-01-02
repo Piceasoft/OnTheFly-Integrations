@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="vendor/fontawesome/css/all.css" rel="stylesheet">
+    <script defer src="vendor/fontawesome/js/all.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/style.min.css" rel="stylesheet">
+
+    <!-- Social media buttons CSS -->
+    <link href="stylesheets/social_media_buttons.css" rel="stylesheet">
+
+    <!-- Material design icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- Navigation -->
+<% include components/navigation_bar.ejs %>
+
+<!-- Header Content -->
+<div class="container-fluid vh-100" id="header-container">
+    <div class="row vh-100">
+        <div class="col-lg-12 text-center align-self-center">
+            <h1 class="text-white">Diagnose your mobile device!</h1>
+            <hr class="divider"/>
+            <p class="text-white">
+                Diagnostics OnTheFly helps to improve customer service by
+                offering instant remote device diagnostics without the need to
+                visit a repair centre or mail in a device.
+
+                <br><br>
+
+                A single operator or retail store representative can process
+                multiple customers at the same time through a customer led
+                device diagnostic check. This allows the end user to run
+                diagnostics and receive advice, repair cost estimation and
+                support without the device ever leaving their hands.
+            </p>
+
+            <br><br>
+
+            <button class="btn btn-circle btn-lg btn-primary" id="start-btn">Start »</button>
+        </div>
+    </div>
+</div>
+
+<!-- OnTheFly Content -->
+<div class="container-fluid p-5" id="integration-container">
+    <div class="container">
+        <div class="h-100 w-100" id="onthefly-container">
+            <div class="row">
+                <div class="col text-center align-self-center">
+
+                    <!-- Error view for failed OnTheFly JavaScript API download -->
+                    <% include components/loading_error.ejs %>
+
+                    <!-- Connecting QR code view -->
+                    <% include components/qrcode_connect_view.ejs %>
+
+                    <!-- Main OnTheFly container including device information, Verify & Diagnostics -->
+
+                    <!-- Connected device information view -->
+                    <div id="main-application-container" style="display: none;">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-5 col-md-3 col-xl-2">
+                                <div class="pt-3 pb-3">
+                                    <img src="" id="device-image" alt="">
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-sm-7 col-md-9 col-xl-10">
+
+                                <div id="device-information-container">
+                                    <% include components/device_information_table.ejs %>
+                                </div>
+
+                                <div id="diagnostics-container" style="display: none;">
+                                    <% include components/diagnostics.ejs %>
+                                </div>
+
+                                <div id="final-container" style="display: none;">
+                                    <% include components/final_view_diagnostics.ejs %>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-5 col-md-3 col-xl-2">
+                                <button class="btn btn-primary btn-circle" id="quit-btn" style="display: inline;">Quit</button>
+                            </div>
+                            <div class="col-xs-12 col-sm-7 col-md-9 col-xl-10">
+                                <button class="btn btn-primary btn-circle" id="start-diagnostics-btn" style="display: none;">Diagnose »</button>
+                                <button class="btn btn-primary btn-circle" id="pdf-report-btn" style="display: none;">PDF Report »</button>
+
+                                <button class="btn btn-primary btn-circle float-right" id="continue-to-diagnostics-btn" style="display: inline;">Continue »</button>
+                                <button class="btn btn-primary btn-circle float-right" id="continue-to-final-view-btn" style="display: none;">Continue »</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<% include components/footer.ejs %>
+
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
+
+<!-- OnTheFly JavaScript API -->
+<script src="<%= onthefly_js_api_url %>"></script>
+
+<script>
+
+    $(document).ready(function() {
+
+        /***********************************************************************
+         * OnTheFly JavaScript API integration
+         **********************************************************************/
+
+        let mDeviceIdentified = false;
+
+        let $loading_error_container = $('#loading-error-container');
+
+        /**
+         * Check that OTFAPI is defined after document loading has finished.
+         */
+        if(typeof OTFAPI.error !== "undefined") {
+            // OnTheFly JavaScript API loading has failed.
+            console.log("OnTheFly JavaScript API loading failed.");
+
+            // Show the error view as OnTheFly JavaScript loading has failed.
+            $loading_error_container.show();
+        } else {
+            // OnTheFly JavaScript API has been successfully loaded.
+            console.log("OnTheFly JavaScript API loaded successfully.");
+
+            // Hide the error view in case it was visible.
+            $loading_error_container.hide();
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has been
+             * successfully loaded and link to connect the mobile device to the
+             * session has been created.
+             */
+            OTFAPI.onLinkCreated(function(link) {
+                console.log("OnTheFly JavaScript API created the link to connect the mobile device.");
+
+                // Embed the generated link to QR code to make it easily accessible for mobile devices.
+                // API: https://api.piceasoft.com/otf/v1/qrcode?data=
+                let $qrCodeImage = $('#qr-code-image');
+
+                $qrCodeImage.attr("src", "https://api.piceasoft.com/otf/v1/qrcode?data=" + link);
+                $qrCodeImage.attr("alt", link);
+
+                // Display the QR code connect container
+                let $qrCodeConnectContainer = $('#qr-code-connect-container');
+                $qrCodeConnectContainer.show();
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * detected that mobile device has joined (scanned the QR code) to
+             * the OnTheFly session.
+             */
+            OTFAPI.onMobileDeviceConnected(function() {
+                console.log("Mobile device connected to OnTheFly session.");
+
+                // Hide the QR code connect container
+                let $qrCodeConnectContainer = $('#qr-code-connect-container');
+                $qrCodeConnectContainer.hide();
+
+                // Display the main application container
+                let $mainApplicationContainer = $('#main-application-container');
+                $mainApplicationContainer.show();
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * detected that mobile device has disconnected from the OnTheFly
+             * session.
+             *
+             * This can happen when the end user stops the OnTheFly session or
+             * closes the PiceaOne app.
+             */
+            OTFAPI.onMobileDeviceDisconnected(function() {
+                console.log("Mobile device disconnected from OnTheFly session.");
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * identified the device connected to the session. Parameter device
+             * includes the detailed information about the device.
+             */
+            OTFAPI.onDeviceIdentified(function(device) {
+                console.log("Device identified by OnTheFly JavaScript API.");
+                console.log(device);
+
+                // Display the device information container
+                if(!mDeviceIdentified) {
+                    let $deviceInformationContainer = $('#device-information-container');
+                    $deviceInformationContainer.show();
+
+                    mDeviceIdentified = true;
+                }
+
+                // Set device information to device information table
+                let deviceManufacturer      = $('#device-manufacturer');
+                let deviceModel             = $('#device-model');
+                let deviceColor             = $('#device-color');
+                let deviceSoftwareVersion   = $('#device-software-version');
+                let deviceCapacity          = $('#device-capacity');
+                let deviceModelCode         = $('#device-model-code');
+                let deviceIMEI              = $('#device-imei');
+                let deviceSerialNumber      = $('#device-serial-number');
+
+                deviceManufacturer          .html(device.manufacturer);
+                deviceModel                 .html(device.model_name);
+                deviceColor                 .html(device.color);
+                deviceSoftwareVersion       .html(device.sw_version);
+                deviceCapacity              .html(device.storage_str);
+                deviceModelCode             .html(device.model_code);
+                deviceIMEI                  .html(device.imei);
+                deviceSerialNumber          .html(device.serial_number);
+
+                // Set device image
+                let deviceImage = $('#device-image');
+                deviceImage.attr('src', device.device_img);
+            });
+
+            /*******************************************************************
+             * OnTheFly JavaScript API Diagnostics integration
+             ******************************************************************/
+
+            /**
+             * Check that loaded OnTheFly JavaScript API contains the
+             * Diagnostics feature.
+             */
+            if(typeof OTFAPI.diagnostics === "undefined") {
+                // OnTheFly JavaScript API has been loaded but Diagnostics
+                // feature is not available.
+                console.log("OnTheFly JavaScript API is loaded but Diagnostics feature is not available.");
+
+                // Show the error view as OnTheFly JavaScript API does not
+                // include Diagnostics feature that we would like to use.
+                $loading_error_container.show();
+            } else {
+                // From here we are safe to use OnTheFly JavaScript API
+                // Diagnostics features.
+
+                // Variables for calculating Diagnostics progress.
+                let mDiagnosticsTestCount           = 15;
+                let mExecutedDiagnosticsTestCount   = 0;
+
+                // Start Diagnostics button
+                let $startDiagnosticsButton = $('#start-diagnostics-btn');
+
+                /**
+                 * Check all Verify checks button handler.
+                 */
+                $startDiagnosticsButton.click(function() {
+                    console.log("Button for checking jailbreak status clicked.");
+
+                    // Reset executed Diagnostics test count.
+                    mExecutedDiagnosticsTestCount = 0;
+
+                    // Set Diagnostics test count in operation.
+                    mDiagnosticsTestCount = 15;
+
+                    // Construct Diagnostics operation configuration.
+                    let diagnosticsOperationConfig = {
+                        sets : [
+                            {
+                                id : OTFAPI.diagnostics.testSet.TS_SOFTWARE,
+                                options : {
+                                    cases : [
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_SOFTWARE_UPDATES,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_STORAGE,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_RAM,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_UPTIME,
+                                            options : {}
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id : OTFAPI.diagnostics.testSet.TS_DISPLAY,
+                                options : {
+                                    cases : [
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_DISPLAY_MULTITOUCH,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_DISPLAY_TOUCH,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_DISPLAY_FORCE_TOUCH,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_DISPLAY_PINCH,
+                                            options : {}
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id : OTFAPI.diagnostics.testSet.TS_HW_BUTTONS,
+                                options : {
+                                    cases : [
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_HWBTN_VOLUME_UP,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_HWBTN_VOLUME_DOWN,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_HWBTN_MUTE,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_HWBTN_POWER,
+                                            options : {}
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id : OTFAPI.diagnostics.testSet.TS_SENSORS,
+                                options : {
+                                    cases : [
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_ACCELEROMETER,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_GYROSCOPE,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_PROXIMITY_SENSOR,
+                                            options : {}
+                                        },
+                                        {
+                                            id : OTFAPI.diagnostics.testCase.TC_FACE_ID,
+                                            options : {}
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    };
+
+                    // Start Diagnostics operation in connected device with
+                    // OnTheFly JavaScript API.
+                    OTFAPI.diagnostics.startOperation(diagnosticsOperationConfig);
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics operation has been started in the device.
+                 *
+                 * Parameter operationStatus includes the information about
+                 * the started Diagnostics operation.
+                 */
+                OTFAPI.diagnostics.onOperationStarted(function(operationStatus) {
+                    console.log("Diagnostics operation (" + operationStatus.uid + ") started.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics operation has been completed in the device.
+                 *
+                 * Parameter operationStatus includes the information about
+                 * the completed Diagnostics operation.
+                 */
+                OTFAPI.diagnostics.onOperationFinished(function(operationStatus) {
+                    console.log("Diagnostics operation (" + operationStatus.uid + ") finished.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test set has been started in the device.
+                 *
+                 * Parameter testSetStatus includes the information about
+                 * the started Diagnostics test set.
+                 */
+                OTFAPI.diagnostics.onTestSetStarted(function(testSetStatus) {
+                    console.log("Diagnostics test set (" + testSetStatus.set_id + ") started.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test set has progressed in the device.
+                 *
+                 * Parameter testSetStatus includes the information about
+                 * the Diagnostics test set.
+                 */
+                OTFAPI.diagnostics.onTestSetProgress(function(testSetStatus) {
+                    console.log("Diagnostics test set (" + testSetStatus.set_id + ") progress.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test set has been completed in the device.
+                 *
+                 * Parameter testSetStatus includes the information about
+                 * the completed Diagnostics test set.
+                 */
+                OTFAPI.diagnostics.onTestSetFinished(function(testSetStatus) {
+                    console.log("Diagnostics test set (" + testSetStatus.set_id + ") finished.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test case has been started in the device.
+                 *
+                 * Parameter testCaseStatus includes the information about
+                 * the started Diagnostics test case.
+                 */
+                OTFAPI.diagnostics.onTestCaseStarted(function(testCaseStatus) {
+                    console.log("Diagnostics test case (" + testCaseStatus.case_id + ") started.");
+                    startTestCaseProgress(testCaseStatus.case_id);
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test case has progressed in the device.
+                 *
+                 * Parameter testCaseStatus includes the information about
+                 * the Diagnostics test case.
+                 */
+                OTFAPI.diagnostics.onTestCaseProgress(function(testCaseStatus) {
+                    console.log("Diagnostics test case (" + testCaseStatus.case_id + ") progress.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Diagnostics test case has been completed in the device.
+                 *
+                 * Parameter testCaseStatus includes the information about
+                 * the completed Diagnostics test case.
+                 */
+                OTFAPI.diagnostics.onTestCaseFinished(function(testCaseStatus) {
+                    console.log("Diagnostics test case (" + testCaseStatus.case_id + ") finished.");
+
+                    // Hide test case progress indicator.
+                    stopTestCaseProgress(testCaseStatus.case_id);
+
+                    // Set test case result to UI.
+                    setTestCaseResult(testCaseStatus.case_id, testCaseStatus.status);
+
+                    // Update executed test case count.
+                    mExecutedDiagnosticsTestCount += 1;
+
+                    // Update Diagnostics operation progress.
+                    let progress = (mExecutedDiagnosticsTestCount / mDiagnosticsTestCount) * 100;
+                    updateDiagnosticsOperationProgress(progress);
+                });
+
+                /**
+                 * Shows progress indicator for test case provided as parameter.
+                 *
+                 * @parameter testCase
+                 * Test case ID which progress indicator will be shown.
+                 * Possible values are defined in OTFAPI.diagnostics.testCase.
+                 */
+                function startTestCaseProgress(testCase) {
+                    // Find the correct progress spinner and result icon
+                    // element from the DOM
+                    let $progressSpinner    = $('#test-case-progress-spinner-' + testCase);
+                    let $resultIcon         = $('#test-case-result-icon-' + testCase);
+
+                    // Adjust elements visibility accordingly
+                    $resultIcon.hide();
+                    $progressSpinner.show();
+                }
+
+                /**
+                 * Hides progress indicator for test case.
+                 *
+                 * @parameter testCase
+                 * Test case ID which progress indicator will be hidden.
+                 * Possible values are defined in OTFAPI.diagnostics.testCase.
+                 */
+                function stopTestCaseProgress(testCase) {
+                    // Find the correct progress spinner and result icon
+                    // element from the DOM
+                    let $progressSpinner    = $('#test-case-progress-spinner-' + testCase);
+                    let $resultIcon         = $('#test-case-result-icon-' + testCase);
+
+                    // Adjust elements visibility accordingly
+                    $progressSpinner.hide();
+                    $resultIcon.show();
+                }
+
+                /**
+                 * Updated Diagnostics operation progress bar.
+                 *
+                 * @Parameter progress
+                 * Progress of the operation. Range 0 - 100.
+                 */
+                function updateDiagnosticsOperationProgress(progress) {
+                    // Update diagnostics operation progress:
+                    let $diagnosticsProgressBar = $('#diagnostics-progress-bar');
+
+                    $diagnosticsProgressBar.attr("aria-valuenow", progress);
+                    $diagnosticsProgressBar.css('width', progress + '%');
+                }
+
+                /**
+                 * Sets result provided as second parameter for test case
+                 * provided as first parameter.
+                 *
+                 * @parameter testCase
+                 * Test case ID which result will be set. Possible values are
+                 * defined in OTFAPI.diagnostics.testCase.
+                 *
+                 * @parameter result
+                 * Result of the test. Possible result values are defined in
+                 * OTFAPI.diagnostics.testCaseResult.
+                 */
+                function setTestCaseResult(testCase, result) {
+                    // Find the correct result icon element from the DOM
+                    let $resultIcon = $('#test-case-result-icon-' + testCase);
+
+                    // Clear possible previous state from the result icon
+                    $resultIcon.removeClass("text-success");
+                    $resultIcon.removeClass("text-danger");
+                    $resultIcon.html("");
+
+                    // Update result element status according to the result
+                    // parameter.
+                    if(result === OTFAPI.diagnostics.testCaseResult.TCR_PASSED) {
+                        $resultIcon.html("check");
+                        $resultIcon.addClass("text-success");
+                    } else {
+                        $resultIcon.html("close");
+                        $resultIcon.addClass("text-danger");
+                    }
+
+                    // Show the result element if if was hidden
+                    $resultIcon.show();
+                }
+            }
+        }
+
+        /*******************************************************************
+         * Event handlers
+         ******************************************************************/
+
+        /**
+         * Document scrolling handler. Scrolls to the integration container
+         * when the Start >> button is clicked.
+         */
+        $("#start-btn").click(function() {
+            let offset = -96;
+
+            $('html, body').animate({
+                scrollTop: $("#integration-container").offset().top + offset
+            }, 800);
+        });
+
+        /**
+         * Quit button handler. Refresh the page to start over.
+         */
+        $("#quit-btn").click(function() {
+            console.log("Quit button pressed. Reload the whole document.");
+
+            location.reload();
+            return false;
+        });
+
+        /**
+         * Continue to Diagnostics button handler.
+         *
+         * Show Diagnostics component and start Diagnostics operation in device.
+         */
+        $("#continue-to-diagnostics-btn").click(function() {
+            console.log("Continue to Diagnostics button clicked.");
+
+            // Show and hide appropriate components on the website.
+            let $deviceInformationContainer = $('#device-information-container');
+            let $diagnosticsContainer       = $('#diagnostics-container');
+            let $finalContainer             = $('#final-container');
+
+            $deviceInformationContainer.hide();
+            $diagnosticsContainer.show();
+            $finalContainer.hide();
+
+            // Show and hide appropriate buttons on the website.
+            let $diagnosticsButton      = $('#continue-to-diagnostics-btn');
+            let $finalViewButton        = $('#continue-to-final-view-btn');
+            let $startDiagnosticsButton = $('#start-diagnostics-btn');
+            let $pdfReportButton        = $("#pdf-report-btn");
+
+            $diagnosticsButton.hide();
+            $finalViewButton.show();
+            $startDiagnosticsButton.show();
+            $pdfReportButton.hide();
+        });
+
+        /**
+         * Continue to Final view button handler.
+         *
+         * Show final view component.
+         */
+        $("#continue-to-final-view-btn").click(function() {
+            console.log("Continue to Diagnostics button clicked.");
+
+            // Show and hide appropriate components on the website.
+            let $deviceInformationContainer = $('#device-information-container');
+            let $diagnosticsContainer       = $('#diagnostics-container');
+            let $finalContainer             = $('#final-container');
+
+            $deviceInformationContainer.hide();
+            $diagnosticsContainer.hide();
+            $finalContainer.show();
+
+            // Show and hide appropriate buttons on the website.
+            let $diagnosticsButton      = $('#continue-to-diagnostics-btn');
+            let $finalViewButton        = $('#continue-to-final-view-btn');
+            let $startDiagnosticsButton = $('#start-diagnostics-btn');
+            let $pdfReportButton        = $("#pdf-report-btn");
+
+            $diagnosticsButton.hide();
+            $finalViewButton.hide();
+            $startDiagnosticsButton.hide();
+            $pdfReportButton.show();
+        });
+
+        /**
+         * Continue to Final view button handler.
+         *
+         * Show final view component.
+         */
+        $("#pdf-report-btn").click(function() {
+            OTFAPI.getReportPDF();
+        });
+    });
+
+</script>
+
+</body>
+
+</html>

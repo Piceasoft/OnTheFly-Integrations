@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="vendor/fontawesome/css/all.css" rel="stylesheet">
+    <script defer src="vendor/fontawesome/js/all.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/style.min.css" rel="stylesheet">
+
+    <!-- Social media buttons CSS -->
+    <link href="stylesheets/social_media_buttons.css" rel="stylesheet">
+
+    <!-- Material design icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- Navigation -->
+<% include components/navigation_bar.ejs %>
+
+<!-- Header Content -->
+<div class="container-fluid vh-100" id="header-container">
+    <div class="row vh-100">
+        <div class="col-lg-12 text-center align-self-center">
+            <h1 class="text-white">Verify your mobile device!</h1>
+            <hr class="divider"/>
+            <p class="text-white">
+                Verify OnTheFly provides an accurate device verification
+                remotely, allowing the end user to run verification at home
+                from a QR code without the need to visit a store or mail in
+                their device.
+
+                <br><br>
+
+                The innovative technology can be integrated simply into
+                business processes. Verify OnTheFly streamlines the trade-in
+                process to ensure a mobile device is acceptable through fast
+                and accurate make/model recognition, IMEI detection, lost and
+                stolen checks, iOS and Android activation lock checks and
+                presence of any media cards.
+            </p>
+
+            <br><br>
+
+            <button class="btn btn-circle btn-lg btn-primary" id="start-btn">Start »</button>
+        </div>
+    </div>
+</div>
+
+<!-- OnTheFly Content -->
+<div class="container-fluid p-5" id="integration-container">
+    <div class="container">
+        <div class="h-100 w-100" id="onthefly-container">
+            <div class="row">
+                <div class="col text-center align-self-center">
+
+                    <!-- Error view for failed OnTheFly JavaScript API download -->
+                    <% include components/loading_error.ejs %>
+
+                    <!-- Connecting QR code view -->
+                    <% include components/qrcode_connect_view.ejs %>
+
+                    <!-- Main OnTheFly container including device information & Verify -->
+
+                    <!-- Connected device information view -->
+                    <div id="main-application-container" style="display: none;">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-5 col-md-3 col-xl-2">
+                                <div class="pt-3 pb-3">
+                                    <img src="" id="device-image" alt="">
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-sm-7 col-md-9 col-xl-10">
+
+                                <div id="device-information-container">
+                                    <% include components/device_information_table.ejs %>
+                                </div>
+
+                                <div id="verify-container" style="display: none;">
+                                    <% include components/verify.ejs %>
+                                </div>
+
+                                <div id="final-container" style="display: none;">
+                                    <% include components/final_view_verify.ejs %>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-5 col-md-3 col-xl-2">
+                                <button class="btn btn-primary btn-circle" id="quit-btn" style="display: inline;">Quit</button>
+                            </div>
+                            <div class="col-xs-12 col-sm-7 col-md-9 col-xl-10">
+                                <button class="btn btn-primary btn-circle" id="start-verify-btn" style="display: none;">Check all »</button>
+                                <button class="btn btn-primary btn-circle" id="pdf-report-btn" style="display: none;">PDF Report »</button>
+
+                                <button class="btn btn-primary btn-circle float-right" id="continue-to-verify-btn" style="display: inline;">Continue »</button>
+                                <button class="btn btn-primary btn-circle float-right" id="continue-to-final-view-btn" style="display: none;">Continue »</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<% include components/footer.ejs %>
+
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
+
+<!-- OnTheFly JavaScript API -->
+<script src="<%= onthefly_js_api_url %>"></script>
+
+<script>
+
+    $(document).ready(function() {
+
+        /***********************************************************************
+         * OnTheFly JavaScript API integration
+         **********************************************************************/
+
+        let mDeviceIdentified = false;
+
+        let $loading_error_container = $('#loading-error-container');
+
+        /**
+         * Check that OTFAPI is defined after document loading has finished.
+         */
+        if(typeof OTFAPI.error !== "undefined") {
+            // OnTheFly JavaScript API loading has failed.
+            console.log("OnTheFly JavaScript API loading failed.");
+
+            // Show the error view as OnTheFly JavaScript loading has failed.
+            $loading_error_container.show();
+        } else {
+            // OnTheFly JavaScript API has been successfully loaded.
+            console.log("OnTheFly JavaScript API loaded successfully.");
+
+            // Hide the error view in case it was visible.
+            $loading_error_container.hide();
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has been
+             * successfully loaded and link to connect the mobile device to the
+             * session has been created.
+             */
+            OTFAPI.onLinkCreated(function(link) {
+                console.log("OnTheFly JavaScript API created the link to connect the mobile device.");
+
+                // Embed the generated link to QR code to make it easily accessible for mobile devices.
+                // API: https://api.piceasoft.com/otf/v1/qrcode?data=
+                let $qrCodeImage = $('#qr-code-image');
+
+                $qrCodeImage.attr("src", "https://api.piceasoft.com/otf/v1/qrcode?data=" + link);
+                $qrCodeImage.attr("alt", link);
+
+                // Display the QR code connect container
+                let $qrCodeConnectContainer = $('#qr-code-connect-container');
+                $qrCodeConnectContainer.show();
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * detected that mobile device has joined (scanned the QR code) to
+             * the OnTheFly session.
+             */
+            OTFAPI.onMobileDeviceConnected(function() {
+                console.log("Mobile device connected to OnTheFly session.");
+
+                // Hide the QR code connect container
+                let $qrCodeConnectContainer = $('#qr-code-connect-container');
+                $qrCodeConnectContainer.hide();
+
+                // Display the main application container
+                let $mainApplicationContainer = $('#main-application-container');
+                $mainApplicationContainer.show();
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * detected that mobile device has disconnected from the OnTheFly
+             * session.
+             *
+             * This can happen when the end user stops the OnTheFly session or
+             * closes the PiceaOne app.
+             */
+            OTFAPI.onMobileDeviceDisconnected(function() {
+                console.log("Mobile device disconnected from OnTheFly session.");
+            });
+
+            /**
+             * OnTheFly JavaScript API calls this callback when the API has
+             * identified the device connected to the session. Parameter device
+             * includes the detailed information about the device.
+             */
+            OTFAPI.onDeviceIdentified(function(device) {
+                console.log("Device identified by OnTheFly JavaScript API.");
+                console.log(device);
+
+                // Display the device information container
+                if(!mDeviceIdentified) {
+                    let $deviceInformationContainer = $('#device-information-container');
+                    $deviceInformationContainer.show();
+
+                    mDeviceIdentified = true;
+                }
+
+                // Set device information to device information table
+                let deviceManufacturer = $('#device-manufacturer');
+                let deviceModel = $('#device-model');
+                let deviceColor = $('#device-color');
+                let deviceSoftwareVersion = $('#device-software-version');
+                let deviceCapacity = $('#device-capacity');
+                let deviceModelCode = $('#device-model-code');
+                let deviceIMEI = $('#device-imei');
+                let deviceSerialNumber = $('#device-serial-number');
+
+                deviceManufacturer.html(device.manufacturer);
+                deviceModel.html(device.model_name);
+                deviceColor.html(device.color);
+                deviceSoftwareVersion.html(device.sw_version);
+                deviceCapacity.html(device.storage_str);
+                deviceModelCode.html(device.model_code);
+                deviceIMEI.html(device.imei);
+                deviceSerialNumber.html(device.serial_number);
+
+                // Set device image
+                let deviceImage = $('#device-image');
+                deviceImage.attr('src', device.device_img);
+            });
+
+            /*******************************************************************
+             * OnTheFly JavaScript API Verify integration
+             ******************************************************************/
+
+            /**
+             * Check that loaded OnTheFly JavaScript API contains the
+             * Verify feature.
+             */
+            if(typeof OTFAPI.verify === "undefined") {
+                // OnTheFly JavaScript API has been loaded but Verify feature is
+                // not available.
+                console.log("OnTheFly JavaScript API is loaded but Verify feature is not available.");
+
+                // Show the error view as OnTheFly JavaScript API does not
+                // include Verify feature that we would like to use.
+                $loading_error_container.show();
+            } else {
+                // From here we are safe to use OnTheFly JavaScript API
+                // Verify features.
+
+                // Verify component elements
+                let $verifyCheckSecurityLockCard = $('#verify-check-security-lock-card');
+                let $verifyCheckSecurityLockButton = $('#verify-check-security-lock-button');
+                let $verifyCheckSimCardCard = $('#verify-check-sim-card-card');
+                let $verifyCheckSimCardButton = $('#verify-check-sim-card-button');
+                let $verifyCheckFindMyiPhoneCard = $('#verify-check-find-my-iphone-card');
+                let $verifyCheckFindMyiPhoneButton = $('#verify-check-find-my-iphone-button');
+                let $verifyCheckJailbreakCard = $('#verify-check-jailbreak-card');
+                let $verifyCheckJailbreakButton = $('#verify-check-jailbreak-button');
+
+                // Check all Verify button
+                let $startVerifyButton = $('#start-verify-btn');
+
+                /**
+                 * Security Lock Verify check button handler.
+                 */
+                $verifyCheckSecurityLockButton.click(function() {
+                    console.log("Button for checking security lock status clicked.");
+                    runVerifyChecks([OTFAPI.verify.check.VerifyCheck_LockCode]);
+                });
+
+                /**
+                 * SIM Card Verify check button handler.
+                 */
+                $verifyCheckSimCardButton.click(function() {
+                    console.log("Button for checking SIM card status clicked.");
+                    runVerifyChecks([OTFAPI.verify.check.VerifyCheck_SIMCard]);
+                });
+
+                /**
+                 * Find My iPhone Verify check button handler.
+                 */
+                $verifyCheckFindMyiPhoneButton.click(function() {
+                    console.log("Button for checking Find My iPhone status clicked.");
+                    runVerifyChecks([OTFAPI.verify.check.VerifyCheck_FindMyiPhone]);
+                });
+
+                /**
+                 * Jailbreak Verify check button handler.
+                 */
+                $verifyCheckJailbreakButton.click(function() {
+                    console.log("Button for checking jailbreak status clicked.");
+                    runVerifyChecks([OTFAPI.verify.check.VerifyCheck_RootedDevice]);
+                });
+
+                /**
+                 * Check all Verify checks button handler.
+                 */
+                $startVerifyButton.click(function() {
+                    console.log("Button for running all Verify checks clicked.");
+                    runVerifyChecks([
+                        OTFAPI.verify.check.VerifyCheck_LockCode,
+                        OTFAPI.verify.check.VerifyCheck_SIMCard,
+                        OTFAPI.verify.check.VerifyCheck_FindMyiPhone,
+                        OTFAPI.verify.check.VerifyCheck_RootedDevice
+                    ]);
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the Verify
+                 * check has been started in the device.
+                 *
+                 * Parameter checkStatus includes the information about started
+                 * Verify check.
+                 */
+                OTFAPI.verify.onCheckStarted(function(checkStatus) {
+                    console.log("Verify check (" + checkStatus.check_id + ") started.");
+                    updateCheckProgress(checkStatus);
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the Verify
+                 * check has been completed in the device.
+                 *
+                 * Parameter checkStatus includes the information about
+                 * completed Verify check.
+                 */
+                OTFAPI.verify.onCheckFinished(function(checkStatus) {
+                    console.log("Verify check (" + checkStatus.check_id + ") finished with status (" + checkStatus.status + ").");
+                    updateCheckStatus(checkStatus);
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Verify operation has been started in the device.
+                 *
+                 * Parameter operationStatus includes the information about
+                 * the started Verify operation.
+                 */
+                OTFAPI.verify.onOperationStarted(function(operationStatus) {
+                    console.log("Verify operation (" + operationStatus.uid + ") has started.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Verify operation has been progressed in the device.
+                 *
+                 * Parameter operationStatus includes the information about
+                 * the progressed Verify operation.
+                 */
+                OTFAPI.verify.onOperationProgress(function(operationStatus) {
+                    console.log("Verify operation (" + operationStatus.uid + ") has progressed.");
+                });
+
+                /**
+                 * OnTheFly JavaScript API calls this callback when the
+                 * Verify operation has been completed in the device.
+                 *
+                 * Parameter operationStatus includes the information about
+                 * the completed Verify operation.
+                 */
+                OTFAPI.verify.onOperationFinished(function(operationStatus) {
+                    console.log("Verify operation (" + operationStatus.uid + ") has completed.");
+                });
+
+                /**
+                 * Constructs a Verify operation configuration object based
+                 * on parameter checks and sends the startOperation
+                 * command to the connected device.
+                 */
+                function runVerifyChecks(checks) {
+                    // Create array of Verify checks to be added to the
+                    // operation configuration that we are going to send to the
+                    // device to handle.
+                    let configurationVerifyChecks = [];
+
+                    // Add check from parameters to the configuration with
+                    // empty options.
+                    for(let check of checks) {
+                        configurationVerifyChecks.push({
+                            id: check,
+                            options: {}
+                        });
+                    }
+
+                    let verifyOperationConfiguration = {
+                        checks: configurationVerifyChecks
+                    };
+
+                    OTFAPI.verify.startOperation(verifyOperationConfiguration);
+                }
+
+                /**
+                 * Updates the Verify check card on UI based on checkStatus
+                 * parameter to show progress for ongoing Verify check.
+                 */
+                function updateCheckProgress(checkStatus) {
+                    let check = checkStatus.check_id;
+                    let $checkCard = getVerifyCheckCard(check);
+
+                    $checkCard.addClass("card-verify-check-ongoing");
+                }
+
+                /**
+                 * Updates the Verify check card on UI based on checkStatus
+                 * parameter to show corresponding Verify check status.
+                 */
+                function updateCheckStatus(checkStatus) {
+                    let check = checkStatus.check_id;
+                    let checkResult = checkStatus.status;
+
+                    let $checkCard = getVerifyCheckCard(check);
+
+                    if($checkCard) {
+                        $checkCard.removeClass("card-verify-check-ongoing");
+                        $checkCard.removeClass("card-verify-nok");
+                        $checkCard.removeClass("card-verify-ok");
+
+                        // Update card status with new one
+                        if(checkResult === OTFAPI.verify.checkStatus.VerifyStatus_Passed) {
+                            $checkCard.addClass("card-verify-ok");
+                        } else {
+                            $checkCard.addClass("card-verify-nok");
+                        }
+                    }
+                }
+
+                /**
+                 * Returns the correct Verify check card based on check
+                 * parameter.
+                 */
+                function getVerifyCheckCard(check) {
+                    switch(check) {
+                        case OTFAPI.verify.check.VerifyCheck_LockCode: {
+                            return $verifyCheckSecurityLockCard;
+                        }
+                        case OTFAPI.verify.check.VerifyCheck_SIMCard: {
+                            return $verifyCheckSimCardCard;
+                        }
+                        case OTFAPI.verify.check.VerifyCheck_FindMyiPhone: {
+                            return $verifyCheckFindMyiPhoneCard;
+                        }
+                        case OTFAPI.verify.check.VerifyCheck_RootedDevice: {
+                            return $verifyCheckJailbreakCard;
+                        }
+                        default: {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+
+        /*******************************************************************
+         * Event handlers
+         ******************************************************************/
+
+        /**
+         * Document scrolling handler. Scrolls to the integration container
+         * when the Start >> button is clicked.
+         */
+        $("#start-btn").click(function() {
+            let offset = -96;
+
+            $('html, body').animate({
+                scrollTop: $("#integration-container").offset().top + offset
+            }, 800);
+        });
+
+        /**
+         * Quit button handler. Refresh the page to start over.
+         */
+        $("#quit-btn").click(function() {
+            console.log("Quit button pressed. Reload the whole document.");
+
+            location.reload();
+            return false;
+        });
+
+        /**
+         * Continue to Verify button handler.
+         *
+         * Show Verify component and start Verify operation in device.
+         */
+        $("#continue-to-verify-btn").click(function() {
+            console.log("Continue to Verify button clicked.");
+
+            // Show and hide appropriate components on the website.
+            let $deviceInformationContainer = $('#device-information-container');
+            let $verifyContainer            = $('#verify-container');
+            let $finalContainer             = $('#final-container');
+
+            $deviceInformationContainer.hide();
+            $verifyContainer.show();
+            $finalContainer.hide();
+
+            // Show and hide appropriate buttons on the website.
+            let $verifyButton           = $('#continue-to-verify-btn');
+            let $finalViewButton        = $('#continue-to-final-view-btn');
+            let $startVerifyButton      = $('#start-verify-btn');
+            let $pdfReportButton        = $("#pdf-report-btn");
+
+            $verifyButton.hide();
+            $finalViewButton.show();
+            $startVerifyButton.show();
+            $pdfReportButton.hide();
+        });
+
+        /**
+         * Continue to Final view button handler.
+         *
+         * Show final view component.
+         */
+        $("#continue-to-final-view-btn").click(function() {
+            console.log("Continue to final view button clicked.");
+
+            // Show and hide appropriate components on the website.
+            let $deviceInformationContainer = $('#device-information-container');
+            let $verifyContainer            = $('#verify-container');
+            let $finalContainer             = $('#final-container');
+
+            $deviceInformationContainer.hide();
+            $verifyContainer.hide();
+            $finalContainer.show();
+
+            // Show and hide appropriate buttons on the website.
+            let $verifyButton           = $('#continue-to-verify-btn');
+            let $finalViewButton        = $('#continue-to-final-view-btn');
+            let $startVerifyButton      = $('#start-verify-btn');
+            let $pdfReportButton        = $("#pdf-report-btn");
+
+            $verifyButton.hide();
+            $finalViewButton.hide();
+            $startVerifyButton.hide();
+            $pdfReportButton.show();
+        });
+
+        /**
+         * Continue to Final view button handler.
+         *
+         * Show final view component.
+         */
+        $("#pdf-report-btn").click(function() {
+            OTFAPI.getReportPDF();
+        });
+    });
+
+</script>
+
+</body>
+
+</html>

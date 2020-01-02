@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="vendor/fontawesome/css/all.css" rel="stylesheet">
+    <script defer src="vendor/fontawesome/js/all.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/style.min.css" rel="stylesheet">
+
+    <!-- Social media buttons CSS -->
+    <link href="stylesheets/social_media_buttons.css" rel="stylesheet">
+
+    <!-- Material design icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- Navigation -->
+<% include components/navigation_bar.ejs %>
+
+<!-- Header Content -->
+<div class="container-fluid vh-100" id="header-container">
+    <div class="row vh-100">
+        <div class="col-lg-12 text-center align-self-center">
+            <h1 class="text-white">Trade-In your mobile device with us!</h1>
+            <hr class="divider"/>
+            <p class="text-white">
+                Piceasoft OnTheFly technology is a new innovative way to easily
+                check Trade-In value of end user’s device based on device
+                condition.
+
+                <br><br>
+
+                Trade-In OnTheFly provides accurate and fair trade-in value for
+                pre-owned mobile devices. The trade-in value is assigned by
+                recognising device make and model, verifying the device is ready
+                for reuse and analysing the device condition.
+            </p>
+
+            <br><br>
+
+            <button class="btn btn-circle btn-lg btn-primary" id="start-btn">Start »</button>
+        </div>
+    </div>
+</div>
+
+<!-- OnTheFly Content -->
+<div class="container-fluid p-5" id="integration-container">
+    <div class="h-100 w-100" id="onthefly-container">
+        <div class="row">
+            <div class="col text-center align-self-center">
+
+                <!-- Error view for failed OnTheFly iframe download -->
+                <% include components/loading_error.ejs %>
+
+                <!-- Main OnTheFly container including Trade-In iframe -->
+                <div id="main-application-container">
+                    <div class="row">
+                        <div id="tradein-iframe-container" class="w-100">
+                            <iframe id="tradein-iframe" width="100%" scrolling="no" frameborder="none" src="<%=onthefly_trade_in_iframe_url%>"></iframe>
+                        </div>
+
+                        <div id="tradein-offer-accepted-container" class="w-100" style="display: none;">
+                            <div class="pt-3 pb-3">
+                                <div class="row">
+                                    <div class="col">
+                                        <h4>Congratulations for accepting the Trade-In offer 🎉</h4>
+                                        <p>You need to ship your device to Acme Inc or visit one of our stores to claim the offer.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tradein-offer-rejected-container" class="w-100" style="display: none;">
+                            <div class="pt-3 pb-3">
+                                <div class="row">
+                                    <div class="col">
+                                        <h4>We are sorry to hear that you declined our Trade-In offer 😢 </h4>
+                                        <p>Used device Trade-In prices change rapidly. Make sure to come back and get a new offer soon!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<% include components/footer.ejs %>
+
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
+
+<script src="vendor/iframe_resizer/iframeResizer.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+
+        /**
+         *  Initialize iframe resizer library
+         */
+        iFrameResize({}, '#tradein-iframe');
+
+        /**
+         * Document scrolling handler. Scrolls to the integration container
+         * when the Start >> button is clicked.
+         */
+        $("#start-btn").click(function() {
+            let offset = -96;
+
+            $('html, body').animate({
+                scrollTop: $("#integration-container").offset().top + offset
+            }, 800);
+        });
+
+        let eventMethod     = window.addEventListener ? "addEventListener" : "attachEvent";
+        let eventer         = window[eventMethod];
+        let messageEvent    = eventMethod === "attachEvent" ? "onmessage" : "message";
+        let eventOrigin     = 'https://services.piceasoft.com';
+
+        let $loading_error_container  = $('#loading-error-container');
+        let $iframe_container         = $("#tradein-iframe-container");
+        let $offer_accepted_container = $("#tradein-offer-accepted-container");
+        let $offer_rejected_container = $("#tradein-offer-rejected-container");
+
+        function messageReceiver(event) {
+            // Ignore messages from other domains unless you are specifically waiting for them
+            if(event.origin !== eventOrigin) {
+                return;
+            }
+
+            let message = event.data;
+
+            // Event for accepted Trade-In offer
+            if(message.type === 'onDealAccepted') {
+                console.log("Trade-In offer was accepted.");
+
+                $iframe_container.hide();
+                $offer_accepted_container.show();
+                $offer_rejected_container.hide();
+            }
+
+            // Event for rejected Trade-In offer
+            if(message.type === 'onDealRejected') {
+                console.log("Trade-In offer was rejected.");
+
+                $iframe_container.hide();
+                $offer_accepted_container.hide();
+                $offer_rejected_container.show();
+            }
+
+            // Event for error during Trade-In workflow
+            if(message.type === 'onError') {
+                let error = message.error;
+
+                console.error(error.status);  // example 1002
+                console.error(error.message); // example 'No transaction ID provided.'
+
+                // Show the error view as OnTheFly Trade-In iframe loading has failed.
+                $iframe_container.hide();
+                $loading_error_container.show();
+            }
+        }
+        eventer(messageEvent, messageReceiver, false);
+
+    });
+</script>
+
+</body>
+
+</html>
