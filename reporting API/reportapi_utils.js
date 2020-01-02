@@ -40,7 +40,7 @@ function getErrorText(code)
     let text = "Undefined error";
     switch (code) {
     case    0: text = "OK";break;
-    case   -1: text = "Internmal error"; break;
+    case   -1: text = "Internal error"; break;
     case 1000: text = "Signature mismatch"; break;
     case 1001: text = "Unknown client ID";  break;
     case 1002: text = "Invalid parameters"; break;
@@ -75,7 +75,7 @@ exports.init = function(apiId, apiKey, urlBase)
     if (typeof urlBase === 'string')
         m_urlBase = urlBase;
 
-    log.info(`Report API inited with API ID '${apiId}' to URL '${m_urlBase}'`);
+    log.info(`Report API initialized with API ID '${apiId}' to URL '${m_urlBase}'`);
     
 };
 
