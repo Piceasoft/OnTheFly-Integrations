@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Project files" pattern="(file[OnTheFly-Integrations]:bin//*||file[OnTheFly-Integrations]:config//*||file[OnTheFly-Integrations]:public/stylesheets//*||file[OnTheFly-Integrations]:public//*)&amp;&amp;!file[OnTheFly-Integrations]:public/vendor//*||file[OnTheFly-Integrations]:reporting API//*||file[OnTheFly-Integrations]:routes//*||file[OnTheFly-Integrations]:utils//*||file[OnTheFly-Integrations]:views//*" />
+</component>

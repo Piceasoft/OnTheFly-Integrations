@@ -25,11 +25,11 @@
 /**
  * Module dependencies.
  */
+
 const app   = require('../app');
 const debug = require('debug')('onthefly-integrations:server');
 const http  = require('http');
 const fs    = require('fs');
-
 
 /**
  * Private modules.
@@ -38,7 +38,6 @@ const fs    = require('fs');
 const reportapi       = require('../reporting API/reportapi.js');
 const log             = require('../utils/log.js');
 
-
 /**
  * Configuration deployment.
  */
@@ -46,7 +45,7 @@ const log             = require('../utils/log.js');
 const CONFIG_FILE          = 'config/config.js';
 const CONFIG_FILE_TEMPLATE = 'config/config.template.js';
 
-if (!fs.existsSync(CONFIG_FILE)) {
+if(!fs.existsSync(CONFIG_FILE)) {
     log.error(`file ${CONFIG_FILE} not found, use ${CONFIG_FILE_TEMPLATE} as basis for it`);
     process.exit(1);
 }
@@ -54,26 +53,21 @@ if (!fs.existsSync(CONFIG_FILE)) {
 const config = require('../' + CONFIG_FILE);
 
 log.setDebugs(config.DEBUG);
+
 reportapi.init(config.REPORTING_API_ID, config.REPORTING_API_KEY, config.REPORTING_API_URL);
-reportapi.poller();
-
-
-/**
- * Get port from environment and store in Express.
- */
-
-
-
+reportapi.poller(function() {});
 
 /**
  * Get port from environment and store in Express.
  */
+
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
+
 const server = http.createServer(app);
 
 /**

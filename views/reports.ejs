@@ -105,7 +105,7 @@
 
             // Update fetched transaction details into DOM
             $(this).find('.transaction-details-container').append('\n\n' + JSON.stringify(transactionDetails, undefined, 2));
-        })
+        });
 
         /**
          * Fetch transaction details for specific transaction from back end.
@@ -124,7 +124,7 @@
             let data = {
                 uid: transactionID,
                 type: transactionType
-            }
+            };
 
             // Transaction details API URL in our server (uses Piceasoft
             // reporting API in server side)

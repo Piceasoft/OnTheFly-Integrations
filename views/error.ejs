@@ -1,3 +1,59 @@
-<h1><%= message %></h1>
-<h2><%= error.status %></h2>
-<pre><%= error.stack %></pre>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title><%= title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="vendor/fontawesome/css/all.css" rel="stylesheet">
+    <script defer src="vendor/fontawesome/js/all.js"></script>
+
+    <!-- Custom CSS -->
+    <link href="stylesheets/style.min.css" rel="stylesheet">
+
+    <!-- Social media buttons CSS -->
+    <link href="stylesheets/social_media_buttons.css" rel="stylesheet">
+
+    <!-- Material design icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- Navigation -->
+<% include components/navigation_bar.ejs %>
+
+<!-- Header Content -->
+<div class="container-fluid vh-100" id="header-container">
+    <div class="row vh-100">
+        <div class="col-lg-12 text-center align-self-center">
+            <h1 class="text-white">⚠️ We hate to tell you this but something went wrong...</h1>
+            <hr class="divider"/>
+            <p class="text-white">
+                There was an error loading the service. Please try again later.
+                <br>
+                (<%= message %>, <%= error.status %>)
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<% include components/footer.ejs %>
+
+<!-- Vendor JavaScript -->
+<% include components/vendor_javascript.ejs %>
+
+</body>
+
+</html>

@@ -41,7 +41,7 @@ const api_utils       = require('./reportapi_utils.js');
    Init reporting API
 
    @param {string}           api_id  - API ID
-   @param {string)}          api_key - API key
+   @param {string}           api_key - API key
    @param {string|undefined} URL base, if not given https://api.piceasoft.com is used
 */
 

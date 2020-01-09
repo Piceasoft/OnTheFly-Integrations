@@ -21,47 +21,131 @@
  */
 
 // Modules
-const express       = require('express');
-const router        = express.Router();
-const uuid          = require('uuid');
+const router        = require('express').Router();
 const querystring   = require('querystring');
+const crypto        = require('crypto');
+const fetch         = require("node-fetch");
 
 // Private modules
+const log           = require('../utils/log');
 const reportingAPI  = require('../reporting API/reportapi');
 
 // Server configuration
 const config        = require('../config/config');
 
+// Initialize logger
+log.setIdentify("[OnTheFly Integrations | index.js]:");
+
 /**
  * GET index page.
  */
-router.get('/', function(req, res, next) {
-
-    // Construct query parameters for loading OnTheFly JavaScript API
-    const queryParameters = {
-        account_id      : config.JS_API_ACCOUNT_ID,
-        transaction_id  : uuid.v4(),
-        features        : 'verify;dgs',
-        user_id         : '4a410871-2968-452b-9dce-98d380b36b6f',
-        user_name       : 'hsalminen'
-    };
-
-    // Construct OnTheFly JavaScript API download URL
-    const OTF_JS_API_URL = config.JS_API_URL + "?" + querystring.stringify(queryParameters);
-
+router.get('/', function(req, res) {
     res.render('index', {
-        title               : 'Acme - OnTheFly',
-        onthefly_js_api_url : OTF_JS_API_URL,
-        navbarConfig        : {
-            activeItem : "trade-in"
+        title : 'Acme - OnTheFly',
+        navbarConfig : {
+            activeItem : "index"
         }
     });
 });
 
 /**
+ * GET Verify page.
+ */
+router.get('/verify', function(req, res, next) {
+
+    // Generate transaction ID against validation API to allow
+    // loading of OnTheFly Trade-In iframe.
+    createValidationTransactionID(config.TRADE_IN_IFRAME_API_PRODUCT_ID)
+        .then((transactionID) => {
+            // Construct query parameters for loading OnTheFly JavaScript API
+            const queryParameters = {
+                product_id      : config.JS_API_PRODUCT_ID,
+                transaction_id  : transactionID,
+                features        : 'verify',
+                user_id         : config.USER_ID,
+                user_name       : config.USER_NAME
+            };
+
+            // Construct OnTheFly JavaScript API download URL
+            const OTF_JS_API_URL = config.JS_API_URL + "?" + querystring.stringify(queryParameters);
+
+            res.render('verify', {
+                title               : 'Acme - OnTheFly Verify',
+                onthefly_js_api_url : OTF_JS_API_URL,
+                navbarConfig        : {
+                    activeItem : "verify"
+                }
+            });
+        })
+        .catch(error => next(error));
+});
+
+/**
+ * GET Diagnostics page.
+ */
+router.get('/diagnostics', function(req, res, next) {
+    // Generate transaction ID against validation API to allow
+    // loading of OnTheFly Trade-In iframe.
+    createValidationTransactionID(config.TRADE_IN_IFRAME_API_PRODUCT_ID)
+        .then((transactionID) => {
+            // Construct query parameters for loading OnTheFly JavaScript API
+            const queryParameters = {
+                product_id      : config.JS_API_PRODUCT_ID,
+                transaction_id  : transactionID,
+                features        : 'dgs',
+                user_id         : config.USER_ID,
+                user_name       : config.USER_NAME
+            };
+
+            // Construct OnTheFly JavaScript API download URL
+            const OTF_JS_API_URL = config.JS_API_URL + "?" + querystring.stringify(queryParameters);
+
+            res.render('diagnostics', {
+                title               : 'Acme - OnTheFly Diagnostics',
+                onthefly_js_api_url : OTF_JS_API_URL,
+                navbarConfig        : {
+                    activeItem : "diagnostics"
+                }
+            });
+        })
+        .catch(error => next(error));
+});
+
+/**
+ * GET Trade-In page.
+ */
+router.get('/tradein', function(req, res, next) {
+
+    // Generate transaction ID against validation API to allow
+    // loading of OnTheFly Trade-In iframe.
+    createValidationTransactionID(config.TRADE_IN_IFRAME_API_PRODUCT_ID)
+        .then((transactionID) => {
+            // Construct query parameters for loading OnTheFly Trade-In iframe
+            const queryParameters = {
+                product_id      : config.TRADE_IN_IFRAME_API_PRODUCT_ID,
+                transaction_id  : transactionID,
+                user_id         : config.USER_ID,
+                user_name       : config.USER_NAME
+            };
+
+            // Construct OnTheFly JavaScript API download URL
+            const TRADE_IN_IFRAME_API_URL = config.TRADE_IN_IFRAME_API_URL + "?" + querystring.stringify(queryParameters);
+
+            res.render('tradein', {
+                title                        : 'Acme - OnTheFly Trade-In',
+                onthefly_trade_in_iframe_url : TRADE_IN_IFRAME_API_URL,
+                navbarConfig                 : {
+                    activeItem : "tradein"
+                }
+            });
+        })
+        .catch(error => next(error));
+});
+
+/**
  * GET reports page.
  */
-router.get('/reports', function(req, res, next) {
+router.get('/reports', function(req, res) {
 
     // Query filters for requesting transactions from reporting API module.
     let queryFilters = {};
@@ -96,7 +180,7 @@ router.get('/reports', function(req, res, next) {
 /**
  * POST get transaction details for specific transaction.
  */
-router.post('/transaction_details', function(req, res, next) {
+router.post('/transaction_details', function(req, res) {
 
     // Parse transaction details from request body.
     const uid = req.body.uid;
@@ -114,5 +198,64 @@ router.post('/transaction_details', function(req, res, next) {
         }
     });
 });
+
+/**
+ * Generate transaction ID to allow loading OnTheFly services
+ * from Piceasoft backend.
+ *
+ * @param productID
+ * @returns {Promise<*>}
+ */
+async function createValidationTransactionID(productID) {
+    let clientID = config.VALIDATION_API_ID;
+    let privateKey = config.VALIDATION_API_KEY;
+
+    let body = JSON.stringify({
+        product_id: productID
+    });
+    let signature = crypto.createHash('sha256').update(privateKey + clientID + body).digest('hex');
+
+    let postData = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Piceasoft-Client-Id': clientID,
+            'X-Piceasoft-Signature': signature,
+            'Content-Length': body.length.toString()
+        },
+        body: body
+    };
+
+    let response;
+
+    try {
+        response = await fetch(config.VALIDATION_API_URL + 'create_transaction_id', postData);
+    } catch(fetchError) {
+        log.error("Failed to generate transaction ID with create_transaction_id API. Error: " + JSON.stringify(fetchError));
+
+        let error = new Error('Service unavailable');
+        error.status = 503;
+        throw error;
+    }
+
+    if(response.status !== 200) {
+        log.error("Failed to generate transaction ID with create_transaction_id API. API response HTTP code: " + response.status);
+
+        let error = new Error('Service unavailable');
+        error.status = 503;
+        throw error;
+    }
+
+    let json = await response.json();
+
+    if(json.status !== 0) {
+        log.error("Failed to generate transaction ID with create_transaction_id API. API response payload code: " + json.status);
+        let error = new Error('Service unavailable');
+        error.status = 503;
+        throw error;
+    }
+
+    return json.transaction_id;
+}
 
 module.exports = router;
