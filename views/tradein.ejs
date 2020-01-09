@@ -139,12 +139,16 @@
         let eventOrigin     = 'https://services.piceasoft.com';
 
         let $loading_error_container  = $('#loading-error-container');
+        let $loading_error_status       = $('#loading-error-status');
+        let $loading_error_message      = $('#loading-error-message');
+
         let $iframe_container         = $("#tradein-iframe-container");
         let $offer_accepted_container = $("#tradein-offer-accepted-container");
         let $offer_rejected_container = $("#tradein-offer-rejected-container");
 
         function messageReceiver(event) {
-            // Ignore messages from other domains unless you are specifically waiting for them
+            // Ignore messages from other domains unless you are specifically
+            // waiting for them
             if(event.origin !== eventOrigin) {
                 return;
             }
@@ -173,11 +177,12 @@
             if(message.type === 'onError') {
                 let error = message.error;
 
-                console.error(error.status);  // example 1002
-                console.error(error.message); // example 'No transaction ID provided.'
-
                 // Show the error view as OnTheFly Trade-In iframe loading has failed.
                 $iframe_container.hide();
+
+                $loading_error_status.html(error.status);
+                $loading_error_message.html(error.message);
+
                 $loading_error_container.show();
             }
         }

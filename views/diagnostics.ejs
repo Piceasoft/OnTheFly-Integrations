@@ -142,7 +142,9 @@
 
         let mDeviceIdentified = false;
 
-        let $loading_error_container = $('#loading-error-container');
+        let $loading_error_container    = $('#loading-error-container');
+        let $loading_error_status       = $('#loading-error-status');
+        let $loading_error_message      = $('#loading-error-message');
 
         /**
          * Check that OTFAPI is defined after document loading has finished.
@@ -150,6 +152,10 @@
         if(typeof OTFAPI.error !== "undefined") {
             // OnTheFly JavaScript API loading has failed.
             console.log("OnTheFly JavaScript API loading failed.");
+
+            // Set loading error details
+            $loading_error_status.html(OTFAPI.error.status);
+            $loading_error_message.html(OTFAPI.error.message);
 
             // Show the error view as OnTheFly JavaScript loading has failed.
             $loading_error_container.show();
