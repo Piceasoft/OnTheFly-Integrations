@@ -2,7 +2,7 @@
  *
  * OnTheFly Trial site server configuration file.
  *
- * @file      config.js
+ * @file      config.template.js
  * @version   1.0
  * @brief     Constant server configurations for OnTheFly Integrations server.
  * @copyright Piceasoft 2019
@@ -16,6 +16,7 @@ module.exports = {
      */
     DEBUG: true,
 
+
     /**
      * External URL pointing to Reporting API.
      */
@@ -26,6 +27,7 @@ module.exports = {
      */
     REPORTING_API_ID: " *** Insert valid reporting API ID here *** ",
     REPORTING_API_KEY: " *** Insert valid reporting API key here *** ",
+
 
     /**
      * External URL pointing to Validation API.
@@ -38,17 +40,20 @@ module.exports = {
     VALIDATION_API_ID: " *** Insert valid validation API ID here *** ",
     VALIDATION_API_KEY: " *** Insert valid validation API key here ***",
 
+
     /**
      * External URL which is used to load the OnTheFly JavaScript API.
      */
     JS_API_URL: "https://api.piceasoft.com/otf/v2/load_jsapi",
     JS_API_PRODUCT_ID: " *** Insert valid product ID here *** ",
 
+
     /**
      * External URL which is used to load the OnTheFly JavaScript API.
      */
     TRADE_IN_IFRAME_API_URL: "https://services.piceasoft.com/service/trading/v1",
     TRADE_IN_IFRAME_API_PRODUCT_ID: " *** Insert valid product ID here *** ",
+
 
     /**
      * User information for OnTheFly session.

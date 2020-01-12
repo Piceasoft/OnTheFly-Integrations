@@ -73,7 +73,7 @@
                 <!-- Main OnTheFly container including Trade-In iframe -->
                 <div id="main-application-container">
                     <div class="row">
-                        <div id="tradein-iframe-container" class="w-100">
+                        <div id="tradein-iframe-container" class="w-100" style="display: none;">
                             <iframe id="tradein-iframe" width="100%" scrolling="no" frameborder="none" src="<%=onthefly_trade_in_iframe_url%>"></iframe>
                         </div>
 
@@ -116,77 +116,7 @@
 <script>
     $(document).ready(function() {
 
-        /**
-         *  Initialize iframe resizer library
-         */
-        iFrameResize({}, '#tradein-iframe');
-
-        /**
-         * Document scrolling handler. Scrolls to the integration container
-         * when the Start >> button is clicked.
-         */
-        $("#start-btn").click(function() {
-            let offset = -96;
-
-            $('html, body').animate({
-                scrollTop: $("#integration-container").offset().top + offset
-            }, 800);
-        });
-
-        let eventMethod     = window.addEventListener ? "addEventListener" : "attachEvent";
-        let eventer         = window[eventMethod];
-        let messageEvent    = eventMethod === "attachEvent" ? "onmessage" : "message";
-        let eventOrigin     = 'https://services.piceasoft.com';
-
-        let $loading_error_container  = $('#loading-error-container');
-        let $loading_error_status       = $('#loading-error-status');
-        let $loading_error_message      = $('#loading-error-message');
-
-        let $iframe_container         = $("#tradein-iframe-container");
-        let $offer_accepted_container = $("#tradein-offer-accepted-container");
-        let $offer_rejected_container = $("#tradein-offer-rejected-container");
-
-        function messageReceiver(event) {
-            // Ignore messages from other domains unless you are specifically
-            // waiting for them
-            if(event.origin !== eventOrigin) {
-                return;
-            }
-
-            let message = event.data;
-
-            // Event for accepted Trade-In offer
-            if(message.type === 'onDealAccepted') {
-                console.log("Trade-In offer was accepted.");
-
-                $iframe_container.hide();
-                $offer_accepted_container.show();
-                $offer_rejected_container.hide();
-            }
-
-            // Event for rejected Trade-In offer
-            if(message.type === 'onDealRejected') {
-                console.log("Trade-In offer was rejected.");
-
-                $iframe_container.hide();
-                $offer_accepted_container.hide();
-                $offer_rejected_container.show();
-            }
-
-            // Event for error during Trade-In workflow
-            if(message.type === 'onError') {
-                let error = message.error;
-
-                // Show the error view as OnTheFly Trade-In iframe loading has failed.
-                $iframe_container.hide();
-
-                $loading_error_status.html(error.status);
-                $loading_error_message.html(error.message);
-
-                $loading_error_container.show();
-            }
-        }
-        eventer(messageEvent, messageReceiver, false);
+        // TODO: Integrate OnTheFly Trade-In iframe
 
     });
 </script>
