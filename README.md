@@ -47,7 +47,7 @@ secrets and shall not be made publicly available!
 Additionally we can provide our individual user information (USER_NAME, USER_ID)
 which will be available in the Piceasoft reporting and reporting API.
 
-## Running the server
+## Running the server locally
 
 After the server configuration setup is done we can start the server.
 
@@ -63,6 +63,27 @@ You can access the server now by going to
 on your favorite browser.
 
 From the URL you should be able to see the index page of our application.
+
+## Running the server with Docker
+
+Project contains really simple Dockerfile and docker-compose configuration
+for local development needs. To start the server first time run the
+following command.
+
+`docker-compose up -d --build`
+
+You can access the server now by going to
+[http://localhost:3000/](http://localhost:3000/)
+on your favorite browser.
+
+When you modify the server related files the server can be restarted with
+the following command.
+
+`docker-compose restart -t 0`
+
+To stop the server use the following command.
+
+`docker-compose stop`
 
 ## Verify OnTheFly integration
 
