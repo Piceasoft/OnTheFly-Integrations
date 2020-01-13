@@ -338,6 +338,10 @@ provide the user ID and user name who is going to do the Verify.
 Now let's restart the server and refresh our browser to see if the error view
 disappeared.
 
+> Tip: Add one additional option to skip the MDM profile installation for
+> quicker development. Add the following option to API URL query parameters.
+> `mdm_profile_policy  : 'no_installation'`
+
 Now that we have successfully loaded the OnTheFly JavaScript API into our web
 application it is time to actually do something with it.
 
@@ -514,8 +518,8 @@ Verify functionality of the API is wrapped in OTFAPI.verify. We can check
 that the verify feature is available and show the error view again if something
 is not right.
 
-Tip: try to remove the the verify feature from the `index.js GET /verify`
-handler `queryParameters` JSON.
+> Tip: try to replace the the `verify` feature with `dgs` feature
+> from the `index.js GET /verify` handler `queryParameters` JSON.
 
 Let's run some Verify checks for the device next. To do this we will first
 create a couple of helper methods for us to run the checks. Add the following
